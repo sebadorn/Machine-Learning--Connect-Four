@@ -3,6 +3,10 @@
 
 import mlp
 
+def print_bold( text ):
+	print chr( 0x1b ) + "[1m" + text + chr( 0x1b ) + "[0m"
+
+
 # Test the neuronal networks with a simple problem: XOR.
 
 inputs  = [[0,0], [0,1], [1,0], [1,1]]
@@ -10,8 +14,8 @@ targets = [[0],   [1],   [1],   [0]]
 
 
 if __name__ == "__main__":
-	print " Testing MLP with XOR:"
 	print " ----- ----- ----- -----"
+	print_bold( " Testing MLP with XOR:" )
 	my_mlp = mlp.MLP( inputs, targets, hidden_nodes = 2 )
 	my_mlp.train( eta = 0.2, iterations = 1000, outtype = "logistic" )
 	out = [

@@ -55,17 +55,22 @@ class MLP:
 
 
 	def early_stopping( self, eta = 0.25, iterations = 1000 ):
-		""" Early stopping. """
+		""" Early stopping. Used instead of method train().
+
+		eta        --
+		iterations -- Number of iterations to do.
+		"""
 
 		# TODO
 		pass
 
 
 	def train( self, eta = 0.25, iterations = 1000, outtype = "logistic" ):
-		""" Train the network.
+		""" Train the network. Used instead of method early_stopping().
 
-		eta  -- 
-		iter -- Number of iterations to do.
+		eta        -- 
+		iterations -- Number of iterations to do.
+		outtype    -- Activation function to use: "linear", "logistic"
 		"""
 
 		self.eta = eta
