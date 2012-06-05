@@ -11,7 +11,7 @@ FILE_DATA = "connect-4.data"
 # Number of attributes in each line
 DATA_NUM_ATTR = 43
 # Limit data to use for training
-DATA_LIMIT = 2000
+DATA_LIMIT = 500
 
 
 def my_converter( x ):
@@ -19,12 +19,12 @@ def my_converter( x ):
 	Replace the strings with float values.
 	"""
 
-	if x == 'x': return 1.0
-	elif x == 'o': return 2.0
-	elif x == 'b': return 0.0
-	elif x == "win": return 1.0
-	elif x == "loss": return 2.0
-	elif x == "draw": return 3.0
+	if x == 'x': return 1
+	elif x == 'o': return 2
+	elif x == 'b': return 0
+	elif x == "win": return 1
+	elif x == "loss": return 2
+	elif x == "draw": return 3
 
 
 def import_traindata( file_in, verbose = False ):
@@ -39,7 +39,7 @@ def import_traindata( file_in, verbose = False ):
 
 	connectfour = ny.loadtxt( file_in, delimiter = ',', converters = convs )
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
-	targets = connectfour[:,DATA_NUM_ATTR:DATA_NUM_ATTR - 1]
+	targets = connectfour[:,DATA_NUM_ATTR - 1:DATA_NUM_ATTR]
 
 	if verbose: sys.stdout.write( " Done.\n\n" )
 

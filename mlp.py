@@ -170,10 +170,10 @@ class MLP:
 		Returns the calculated output.
 		"""
 
-		inputs = ny.array( inputs )
+		inputs = ny.array( [inputs] )
 
 		# Add bias node
-		ones = -ny.ones( ( len( inputs ), 1 ) )
+		ones = -ny.ones( ( 1, 1 ) )
 		inputs = ny.concatenate( ( inputs, ones ), axis = 1 )
 
 		# Activation in hidden layer
@@ -182,7 +182,31 @@ class MLP:
 		hidden = ny.concatenate( ( hidden, ones ), axis = 1 )
 
 		# Acitvation in output layer
+		print self.weights_layer2
 		outputs = ny.dot( hidden, self.weights_layer2 )
+		print outputs
 		outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+		print outputs
 
 		return outputs
+
+
+
+if __name__ == "__main__":
+	# Test the neuronal networks with a simple problem: XOR.
+	inputs  = [[0,0], [0,1], [1,0], [1,1]]
+	targets = [[0],   [1],   [1],   [0]]
+
+	print "Testing MLP with XOR:"
+	my_mlp = MLP( inputs, targets, hidden_nodes = 2 )
+	my_mlp.train( eta = 0.2, iterations = 1000, outtype = "logistic" )
+	out = [
+		round( my_mlp.use( [0,0] ) ), round( my_mlp.use( [0,1] ) ),
+		round( my_mlp.use( [1,0] ) ), round( my_mlp.use( [1,1] ) )
+	]
+	target = [0,1,1,0]
+	correct = 0
+	for i in range( 4 ):
+		if out[i] == target[i]: correct += 1
+		else: print "  False: %d == %d" % ( out[i], target[i] )
+	print "Correct: %d/4" % correct
