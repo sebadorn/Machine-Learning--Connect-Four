@@ -3,6 +3,7 @@
 
 import os, sys, numpy as ny
 import mlp
+import game
 
 
 # File name with training data
@@ -10,7 +11,7 @@ FILE_DATA = "connect-4.data"
 # Number of attributes in each line
 DATA_NUM_ATTR = 43
 # Limit data to use for training
-DATA_LIMIT = 10000
+DATA_LIMIT = 2000
 
 
 def my_converter( x ):
@@ -60,6 +61,7 @@ def print_help():
 	print_bold( "    Handling the AI" )
 	print "    select * - Select the AI type to use: MLP, RBF, DTree"
 	print "    train    - Train the previously selected AI."
+	print "    play     - Play Connect Four."
 	print
 
 
@@ -101,6 +103,8 @@ if __name__ == "__main__":
 				print "ERROR: RBF not yet implemented."
 			elif cl == "DTree":
 				print "ERROR: DTree not yet implemented."
+			else:
+				print "ERROR: Unknown AI type."
 
 		elif cl == "train":
 			if not ann:
@@ -109,5 +113,9 @@ if __name__ == "__main__":
 				ann.train()
 				print "Training completed."
 
-		else:
+		elif cl == "play":
+			vg = game.Game( ann )
+			vg.play()
+
+		elif cl != "":
 			print "Unknown command."

@@ -170,7 +170,7 @@ class MLP:
 		Returns the calculated output.
 		"""
 
-		inputs = ny.array( [inputs] )
+		inputs = ny.array( inputs )
 
 		# Add bias node
 		ones = -ny.ones( ( len( inputs ), 1 ) )
