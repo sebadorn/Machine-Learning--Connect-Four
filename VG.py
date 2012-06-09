@@ -10,8 +10,6 @@ import mlp, game
 FILE_DATA = "connect-4.data"
 # Number of attributes in each line
 DATA_NUM_ATTR = 43
-# Limit data to use for training (67557 in total)
-DATA_LIMIT = 2000
 
 
 def my_converter( x ):
@@ -22,8 +20,8 @@ def my_converter( x ):
 	if x == 'x': return STONE_HUMAN
 	elif x == 'o': return STONE_AI
 	elif x == 'b': return STONE_BLANK
-	elif x == "win": return WIN
-	elif x == "loss": return LOSS
+	elif x == "win": return LOSS # No, not a mistake
+	elif x == "loss": return WIN # No, not a mistake
 	elif x == "draw": return DRAW
 
 
@@ -39,6 +37,17 @@ def import_traindata( file_in ):
 	convs = dict( zip( range( DATA_NUM_ATTR + 1 ) , [my_converter] * DATA_NUM_ATTR ) )
 
 	connectfour = ny.loadtxt( file_in, delimiter = ',', converters = convs )
+
+	# Normalize
+	connectfour -= connectfour.mean( axis = 0 )
+	imax = ny.concatenate(
+		(
+			connectfour.max( axis = 0 ) * ny.ones( ( 1, 43 ) ),
+			connectfour.min( axis = 0 ) * ny.ones( ( 1, 43 ) )
+		), axis = 0 ).max( axis = 0 )
+	connectfour /= imax
+
+	# Split in data and targets
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
 	targets = connectfour[:,DATA_NUM_ATTR - 1:DATA_NUM_ATTR]
 
@@ -78,6 +87,7 @@ if __name__ == "__main__":
 	shuffle = range( DATA_LIMIT )
 	ny.random.shuffle( shuffle )
 	data, targets = data[shuffle,:], targets[shuffle,:]
+	valid, validtargets = data[:int( DATA_LIMIT / 3 )], targets[:int( DATA_LIMIT / 3 )]
 
 	ai = False
 
@@ -98,7 +108,7 @@ if __name__ == "__main__":
 		elif cl.startswith( "select " ):
 			cl = cl.replace( "select ", "" )
 			if cl == "MLP":
-				ai = mlp.MLP( data, targets )
+				ai = mlp.MLP( data, targets, hidden_nodes = MLP_HIDDEN_NODES )
 				print "MLP created."
 			elif cl == "RBF":
 				print "ERROR: RBF not yet implemented."
@@ -111,7 +121,11 @@ if __name__ == "__main__":
 			if not ai:
 				print "Training not possible. You have to select an AI type first."
 			else:
-				ai.train()
+				#ai.train()
+				ai.early_stopping(
+					valid, validtargets,
+					eta = MLP_ETA, iterations = MLP_ITER, outtype = MLP_OUTTYPE
+				)
 				print "Training completed."
 
 		elif cl == "play":

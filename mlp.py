@@ -54,21 +54,35 @@ class MLP:
 		)
 
 
-	def early_stopping( self, eta = 0.25, iterations = 1000 ):
+	def early_stopping( self, valid, validtargets, eta = 0.25, iterations = 1000, outtype = "logistic" ):
 		""" Early stopping. Used instead of method train().
 
-		eta        --
+		eta        -- Learning rate.
 		iterations -- Number of iterations to do.
 		"""
 
-		# TODO
-		pass
+		# Add bias node
+		valid = ny.concatenate( ( valid, -ny.ones( ( len( valid ), 1 ) ) ), axis = 1 )
+
+		old_val_err1, old_val_err2, new_val_err = 100002, 100001, 100000
+		count = 0
+
+		while ( old_val_err1 - new_val_err > 0.001 ) or ( old_val_err2 - old_val_err1 > 0.001 ):
+			count += 1
+			if count % 10 == 0:
+				print "[early_stopping] count: %d   error: %f" % ( count, new_val_err )
+			self.train( eta, iterations, outtype )
+			old_val_err2 = old_val_err1
+			old_val_err1 = new_val_err
+			validout = self._forward( valid )
+			new_val_err = 0.5 * ny.sum( ( validtargets - validout ) ** 2 )
+		print "[early_stopping] end count: " + str( count ) + " and error: " + str( new_val_err )
 
 
 	def train( self, eta = 0.25, iterations = 1000, outtype = "logistic" ):
 		""" Train the network. Used instead of method early_stopping().
 
-		eta        -- 
+		eta        -- Learning rate.
 		iterations -- Number of iterations to do.
 		outtype    -- Activation function to use: "linear", "logistic"
 		"""
@@ -83,7 +97,7 @@ class MLP:
 
 		# Start training
 		for n in range( iterations ):
-			self.outputs = self._forward()
+			self.outputs = self._forward( self.inputs )
 
 			# Compute error and update weights
 			deltao, deltah = self._compute_errors()
@@ -95,16 +109,16 @@ class MLP:
 			self.targets = self.targets[shuffle,:]
 
 
-	def _forward( self ):
+	def _forward( self, inputs ):
 		""" Forward phase.
 
 		Returns the calculated outputs.
 		"""
 
-		ones = -ny.ones( ( self.data_amount, 1 ) )
+		ones = -ny.ones( ( len( inputs ), 1 ) )
 
 		# Activation in hidden layer
-		self.hidden = ny.dot( self.inputs, self.weights_layer1 )
+		self.hidden = ny.dot( inputs, self.weights_layer1 )
 		self.hidden = 1.0 / ( 1.0 + ny.exp( -self.beta * self.hidden ) )
 		self.hidden = ny.concatenate( ( self.hidden, ones ), axis = 1 )
 
@@ -115,6 +129,9 @@ class MLP:
 			pass
 		elif self.outtype == "logistic":
 			outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+		elif self.outtype == 'softmax':
+			normalisers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
+			outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalisers )
 		else:
 			print "ERROR: Unknown outtype = %s" % outtype
 
@@ -134,6 +151,8 @@ class MLP:
 			deltao /= self.data_amount
 		elif self.outtype == "logistic":
 			deltao *= self.outputs * ( 1.0 - self.outputs )
+		elif self.outtype == 'softmax':
+			deltao /= self.data_amount
 
 		# Error in hidden layer
 		deltah = self.hidden * ( 1.0 - self.hidden )

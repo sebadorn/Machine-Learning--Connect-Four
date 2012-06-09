@@ -18,7 +18,7 @@ class Game:
 	def _init_field( self ):
 		""" Init play field. """
 
-		self.board = ny.zeros( ( FIELD_WIDTH, FIELD_HEIGHT ) )
+		self.board = ny.array( [[STONE_BLANK] * FIELD_HEIGHT] * FIELD_WIDTH )
 		self.current_height = [0] * FIELD_WIDTH
 
 
@@ -137,7 +137,9 @@ class Game:
 				break
 
 			# Place ai stone
-			pos_win, pos_draw, pos_loss = [], [], []
+			pos_win = { "col": 0, "out": 0 }
+			pos_draw = { "col": 0, "out": 0 }
+			pos_loss = { "col": 0, "out": 0 }
 
 			random.shuffle( x_range )
 			for x in x_range:
@@ -157,27 +159,33 @@ class Game:
 
 				# Get the possible outcome
 				ai_output = self.ai.use( ai_board_format )[0][0]
-				print ai_output
+				print x, ai_output
 
-				if ai_output == WIN:
-					pos_win.append( x )
-				elif ai_output == DRAW:
-					pos_draw.append( x )
-				elif ai_output == LOSS:
-					pos_loss.append( x )
+				if round( ai_output ) == WIN:
+					diff_new = WIN - ai_output
+					diff_old = WIN - pos_win["out"]
+					pos_win["col"] = x if diff_new < diff_old else pos_win["col"]
+				elif round( ai_output ) == DRAW:
+					diff_new = DRAW - ai_output
+					diff_old = DRAW - pos_draw["out"]
+					pos_draw["col"] = x if diff_new < diff_old else pos_draw["col"]
+				elif round( ai_output ) == LOSS:
+					diff_new = LOSS - ai_output
+					diff_old = LOSS - pos_loss["out"]
+					pos_loss["col"] = x if diff_new < diff_old else pos_loss["col"]
 
 			# Select best possible result
-			if len( pos_win ) > 0:
-				use_pos = pos_win[0]
-			elif len( pos_draw ) > 0:
-				use_pos = pos_draw[0]
-			elif len( pos_loss ) > 0:
-				use_pos = pos_loss[0]
+			if pos_win["col"] > 0:
+				use_pos = pos_win["col"]
+			elif pos_draw["col"] > 0:
+				use_pos = pos_draw["col"]
+			elif pos_loss["col"] > 0:
+				use_pos = pos_loss["col"]
 			# This shouldn't be possible
 			else:
-				print "The AI has no idea what to do and stares mindless at a cloud outside the window."
-				print "The cloud looks like a rabbit riding a pony."
-				print "You won."
+				print "-- The AI has no idea what to do and stares mindlessly at a cloud outside the window."
+				print "-- The cloud looks like a rabbit riding a pony."
+				print "-- You win by forfeit."
 				break
 
 			print "AI places stone in column " + str( use_pos ) + "."
@@ -209,7 +217,12 @@ class Game:
 		for y in reversed( range( FIELD_HEIGHT ) ):
 			sys.stdout.write( " | " )
 			for x in range( FIELD_WIDTH ):
-				sys.stdout.write( str( int( board[x][y] ) ) + " | " )
+				field = ' '
+				if board[x][y] == STONE_HUMAN:
+					field = 'x'
+				elif board[x][y] == STONE_AI:
+					field = 'o'
+				sys.stdout.write( field + " | " )
 			print ''
 		sys.stdout.write( ' ' )
 		print '¯' * ( FIELD_WIDTH * 4 + 1 )
@@ -219,5 +232,6 @@ class Game:
 if __name__ == "__main__":
 	# Small test
 	g = Game( None )
+	print g.board
 	g.print_board( g.board )
 	print "Well, nothing crashed …"
