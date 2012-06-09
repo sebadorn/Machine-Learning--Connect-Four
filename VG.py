@@ -1,17 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from global_vars import *
 import os, sys, numpy as ny
-import mlp
-import game
+import mlp, game
 
 
 # File name with training data
 FILE_DATA = "connect-4.data"
 # Number of attributes in each line
 DATA_NUM_ATTR = 43
-# Limit data to use for training
-DATA_LIMIT = 500
+# Limit data to use for training (67557 in total)
+DATA_LIMIT = 2000
 
 
 def my_converter( x ):
@@ -19,18 +19,19 @@ def my_converter( x ):
 	Replace the strings with float values.
 	"""
 
-	if x == 'x': return 1
-	elif x == 'o': return 2
-	elif x == 'b': return 0
-	elif x == "win": return 1
-	elif x == "loss": return 2
-	elif x == "draw": return 3
+	if x == 'x': return STONE_HUMAN
+	elif x == 'o': return STONE_AI
+	elif x == 'b': return STONE_BLANK
+	elif x == "win": return WIN
+	elif x == "loss": return LOSS
+	elif x == "draw": return DRAW
 
 
-def import_traindata( file_in, verbose = False ):
+def import_traindata( file_in ):
 	""" Import the file with training data for the AI. """
 
-	if verbose: sys.stdout.write( "Importing training data ..." ); sys.stdout.flush()
+	sys.stdout.write( "Importing training data ..." )
+	sys.stdout.flush()
 
 	# Assign converters for each attribute.
 	# A dict where the key is the index for each attribute.
@@ -41,7 +42,7 @@ def import_traindata( file_in, verbose = False ):
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
 	targets = connectfour[:,DATA_NUM_ATTR - 1:DATA_NUM_ATTR]
 
-	if verbose: sys.stdout.write( " Done.\n\n" )
+	sys.stdout.write( " Done.\n\n" )
 
 	return data, targets
 
@@ -72,13 +73,13 @@ if __name__ == "__main__":
 	print "// Type 'help' for more."
 	print
 
-	data, targets = import_traindata( FILE_DATA, verbose = True )
+	data, targets = import_traindata( FILE_DATA )
 
 	shuffle = range( DATA_LIMIT )
 	ny.random.shuffle( shuffle )
 	data, targets = data[shuffle,:], targets[shuffle,:]
 
-	ann = False
+	ai = False
 
 	# Main loop
 	while 1:
@@ -97,7 +98,7 @@ if __name__ == "__main__":
 		elif cl.startswith( "select " ):
 			cl = cl.replace( "select ", "" )
 			if cl == "MLP":
-				ann = mlp.MLP( data, targets )
+				ai = mlp.MLP( data, targets )
 				print "MLP created."
 			elif cl == "RBF":
 				print "ERROR: RBF not yet implemented."
@@ -107,14 +108,14 @@ if __name__ == "__main__":
 				print "ERROR: Unknown AI type."
 
 		elif cl == "train":
-			if not ann:
+			if not ai:
 				print "Training not possible. You have to select an AI type first."
 			else:
-				ann.train()
+				ai.train()
 				print "Training completed."
 
 		elif cl == "play":
-			vg = game.Game( ann )
+			vg = game.Game( ai )
 			vg.play()
 
 		elif cl != "":

@@ -182,11 +182,8 @@ class MLP:
 		hidden = ny.concatenate( ( hidden, ones ), axis = 1 )
 
 		# Acitvation in output layer
-		print self.weights_layer2
 		outputs = ny.dot( hidden, self.weights_layer2 )
-		print outputs
 		outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
-		print outputs
 
 		return outputs
 

@@ -1,25 +1,17 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 
-import numpy as ny
+from global_vars import *
+import sys, random, numpy as ny
 import mlp
-
-
-FIELD_WIDTH = 7
-FIELD_HEIGHT = 6
-CONNECT = 4
-
-STONE_BLANK = 0
-STONE_HUMAN = 1
-STONE_ANN = 2
 
 
 class Game:
 	""" Play a game of Connect Four. """
 
 
-	def __init__( self, ann ):
-		self.ann = ann
+	def __init__( self, ai ):
+		self.ai = ai
 		self._init_field()
 
 
@@ -50,45 +42,54 @@ class Game:
 		Returns the stone value of the winner.
 		"""
 
+		count = 0
 		for x in range( FIELD_WIDTH ):
 			for y in range( FIELD_HEIGHT ):
 				stone = self.board[x][y]
 				# We only care about players, not blank fields
 				if stone == STONE_BLANK:
-					continue
+					count = 0; continue
 
 				# Look up
 				for i in range( 1, CONNECT ):
 					if y + i >= FIELD_HEIGHT:
-						break
+						count = 0; break
 					# C-c-c-combo breaker!
 					if stone != self.board[x][y + i]:
-						break
-					# All stones connected: Winner found!
+						count = 0; break
+					count += 1
+				# All stones connected: Winner found!
+				if count + 1 == CONNECT:
 					return stone
 
 				# Look right
 				for i in range( 1, CONNECT ):
 					if x + i >= FIELD_WIDTH:
-						break
+						count = 0; break
 					if stone != self.board[x + i][y]:
-						break
+						count = 0; break
+					count += 1
+				if count + 1 == CONNECT:
 					return stone
 
 				# Look diagonal right
 				for i in range( 1, CONNECT ):
 					if x + i >= FIELD_WIDTH or y + i >= FIELD_HEIGHT:
-						break
+						count = 0; break
 					if stone != self.board[x + i][y + i]:
-						break
+						count = 0; break
+					count += 1
+				if count + 1 == CONNECT:
 					return stone
 
 				# Look diagonal left
 				for i in range( 1, CONNECT ):
 					if x - i < 0 or y + i >= FIELD_HEIGHT:
-						break
+						count = 0; break
 					if stone != self.board[x - i][y + i]:
-						break
+						count = 0; break
+					count += 1
+				if count + 1 == CONNECT:
 					return stone
 
 		return STONE_BLANK
@@ -105,6 +106,8 @@ class Game:
 
 	def play( self ):
 		""" Start playing. """
+
+		x_range = range( FIELD_WIDTH )
 
 		while 1:
 			try:
@@ -123,27 +126,73 @@ class Game:
 			self.current_height[x] += 1
 			self.board[x][y] = STONE_HUMAN
 
-			winner = self.check_win()
-			if winner == STONE_HUMAN:
-				print "You won!"
-				break
-			elif winner == STONE_ANN:
-				print "The ANN won!"
-				break
-
-			# Place ANN stone
-			ann_board_format = []
-			for i in range( FIELD_WIDTH ):
-				ann_board_format.extend( self.board[i] )
-			ann_output = self.ann.use( ann_board_format )
-			print ann_output
+			self.print_board( self.board )
 
 			winner = self.check_win()
 			if winner == STONE_HUMAN:
 				print "You won!"
 				break
-			elif winner == STONE_ANN:
-				print "The ANN won!"
+			elif winner == STONE_AI:
+				print "The ai won!"
+				break
+
+			# Place ai stone
+			pos_win, pos_draw, pos_loss = [], [], []
+
+			random.shuffle( x_range )
+			for x in x_range:
+				# Cell (y) in this column (x) we are currently testing
+				y = self.current_height[x]
+				if y >= FIELD_HEIGHT:
+					continue
+
+				# Don't change the real game board
+				board_copy = self.board.copy()
+				board_copy[x][y] = STONE_AI
+
+				# Array format for the ai: 7x6 -> 1x42
+				ai_board_format = []
+				for i in range( FIELD_WIDTH ):
+					ai_board_format.extend( board_copy[i] )
+
+				# Get the possible outcome
+				ai_output = self.ai.use( ai_board_format )[0][0]
+				print ai_output
+
+				if ai_output == WIN:
+					pos_win.append( x )
+				elif ai_output == DRAW:
+					pos_draw.append( x )
+				elif ai_output == LOSS:
+					pos_loss.append( x )
+
+			# Select best possible result
+			if len( pos_win ) > 0:
+				use_pos = pos_win[0]
+			elif len( pos_draw ) > 0:
+				use_pos = pos_draw[0]
+			elif len( pos_loss ) > 0:
+				use_pos = pos_loss[0]
+			# This shouldn't be possible
+			else:
+				print "The AI has no idea what to do and stares mindless at a cloud outside the window."
+				print "The cloud looks like a rabbit riding a pony."
+				print "You won."
+				break
+
+			print "AI places stone in column " + str( use_pos ) + "."
+			y = self.current_height[use_pos]
+			self.board[use_pos][y] = STONE_AI
+			self.current_height[use_pos] += 1
+
+			self.print_board( self.board )
+
+			winner = self.check_win()
+			if winner == STONE_HUMAN:
+				print "You won!"
+				break
+			elif winner == STONE_AI:
+				print "The AI won!"
 				break
 
 			# Draw
@@ -154,8 +203,21 @@ class Game:
 		print "Game ended."
 
 
+	def print_board( self, board ):
+		""" Print the current game board. """
+
+		for y in reversed( range( FIELD_HEIGHT ) ):
+			sys.stdout.write( " | " )
+			for x in range( FIELD_WIDTH ):
+				sys.stdout.write( str( int( board[x][y] ) ) + " | " )
+			print ''
+		sys.stdout.write( ' ' )
+		print '¯' * ( FIELD_WIDTH * 4 + 1 )
+
+
 
 if __name__ == "__main__":
 	# Small test
 	g = Game( None )
+	g.print_board( g.board )
 	print "Well, nothing crashed …"
