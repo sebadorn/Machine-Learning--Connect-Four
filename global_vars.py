@@ -3,7 +3,7 @@
 
 
 # Limit data to use for training (67557 in total)
-DATA_LIMIT = 1000
+DATA_LIMIT = 10000
 
 # Game board
 FIELD_WIDTH = 7
@@ -16,13 +16,16 @@ STONE_HUMAN = 2.0
 STONE_AI = 3.0
 
 # Results
-WIN = 1.0
-DRAW = 2.0
-LOSS = 3.0
+WIN = 0.333
+DRAW = 0.667
+LOSS = 1.0
 
-# Config
+# Config MLP
+MLP_BETA = 1.0
+MLP_ES_DIFF = 0.01 # Error difference in early stopping
+MLP_ETA = 0.3
+MLP_EXPORT_FILE = "export_mlp.txt"
 MLP_HIDDEN_NODES = 20
-MLP_ETA = 0.6
 MLP_ITER = 100
+MLP_MOMENTUM = 0.9
 MLP_OUTTYPE = "linear"
-MLP_ES_DIFF = 0.001 # Error difference in early stopping

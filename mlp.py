@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from global_vars import *
 import numpy as ny
 
 
@@ -53,6 +54,11 @@ class MLP:
 			self.nodes_hidden + 1, self.nodes_out
 		)
 
+		self.weights_layer1 -= 0.5
+		self.weights_layer2 -= 0.5
+		self.weights_layer1 *= 2.0 / ny.sqrt( self.nodes_in )
+		self.weights_layer2 *= 2.0 / ny.sqrt( self.nodes_hidden )
+
 
 	def early_stopping( self, valid, validtargets, eta = 0.25, iterations = 1000, outtype = "logistic" ):
 		""" Early stopping. Used instead of method train().
@@ -67,7 +73,7 @@ class MLP:
 		old_val_err1, old_val_err2, new_val_err = 100002, 100001, 100000
 		count = 0
 
-		while ( old_val_err1 - new_val_err > 0.001 ) or ( old_val_err2 - old_val_err1 > 0.001 ):
+		while ( old_val_err1 - new_val_err > MLP_ES_DIFF ) or ( old_val_err2 - old_val_err1 > MLP_ES_DIFF ):
 			count += 1
 			if count % 10 == 0:
 				print "[early_stopping] count: %d   error: %f" % ( count, new_val_err )
@@ -207,6 +213,60 @@ class MLP:
 		return outputs
 
 
+	def export( self ):
+		""" Export the weight layers of the MLP. """
+
+		layer_1 = str( self.weights_layer1 )
+		layer_1 = layer_1.replace( '[', '' )
+		layer_1 = layer_1.replace( ']', '' )
+		layer_1 = layer_1.replace( '  ', ' ' )
+
+		layer_2 = str( self.weights_layer2 )
+		layer_2 = layer_2.replace( '[', '' )
+		layer_2 = layer_2.replace( ']', '' )
+		layer_2 = layer_2.replace( '  ', ' ' )
+
+		f = open( MLP_EXPORT_FILE, 'w' )
+		f.write( "# Layer 1\n" )
+		f.write( layer_1 )
+		f.write( "\n\n# Layer 2\n" )
+		f.write( layer_2 )
+		f.close()
+
+
+	def import_weights( self, filename = MLP_EXPORT_FILE ):
+		""" Imports weight layers from a file. """
+
+		f = open( filename, 'r' )
+
+		import_layer, i = 0, 0
+		for line in f:
+			line = line.strip()
+			if len( line ) <= 1:
+				i = 0
+				continue
+			elif line == "# Layer 1":
+				import_layer, i = 1, 0
+				continue
+			elif line == "# Layer 2":
+				import_layer, i = 2, 0
+				continue
+
+			j = 0
+			for value in line.split( ' ' ):
+				if value == '':
+					continue
+				value = float( value.strip() )
+				if import_layer == 1:
+					self.weights_layer1[i][j] = value
+				elif import_layer == 2:
+					self.weights_layer2[i][j] = value
+				j += 1
+			i += 1
+
+		f.close()
+
+
 
 if __name__ == "__main__":
 	# Test the neuronal networks with a simple problem: XOR.
@@ -226,3 +286,7 @@ if __name__ == "__main__":
 		if out[i] == target[i]: correct += 1
 		else: print "  False: %d == %d" % ( out[i], target[i] )
 	print "Correct: %d/4" % correct
+	my_mlp.export()
+	print "Weight layers exported to %s." % MLP_EXPORT_FILE
+	my_mlp.import_weights()
+	print "Weight layers imported from %s." % MLP_EXPORT_FILE

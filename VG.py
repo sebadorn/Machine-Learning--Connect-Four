@@ -6,6 +6,11 @@ import os, sys, numpy as ny
 import mlp, game
 
 
+# Explanation for the trainings data:
+# Every line contains equal amounts of x and o stones.
+# The win/loss/draw indicates the outcome for the next
+# player, if both follow a perfect plan.
+
 # File name with training data
 FILE_DATA = "connect-4.data"
 # Number of attributes in each line
@@ -20,8 +25,8 @@ def my_converter( x ):
 	if x == 'x': return STONE_HUMAN
 	elif x == 'o': return STONE_AI
 	elif x == 'b': return STONE_BLANK
-	elif x == "win": return LOSS # No, not a mistake
-	elif x == "loss": return WIN # No, not a mistake
+	elif x == "win": return WIN
+	elif x == "loss": return LOSS
 	elif x == "draw": return DRAW
 
 
@@ -38,18 +43,18 @@ def import_traindata( file_in ):
 
 	connectfour = ny.loadtxt( file_in, delimiter = ',', converters = convs )
 
-	# Normalize
-	connectfour -= connectfour.mean( axis = 0 )
-	imax = ny.concatenate(
-		(
-			connectfour.max( axis = 0 ) * ny.ones( ( 1, 43 ) ),
-			connectfour.min( axis = 0 ) * ny.ones( ( 1, 43 ) )
-		), axis = 0 ).max( axis = 0 )
-	connectfour /= imax
-
 	# Split in data and targets
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
 	targets = connectfour[:,DATA_NUM_ATTR - 1:DATA_NUM_ATTR]
+
+	# Normalize
+	data -= data.mean( axis = 0 )
+	imax = ny.concatenate(
+		(
+			data.max( axis = 0 ) * ny.ones( ( 1, len( data[0] ) ) ),
+			data.min( axis = 0 ) * ny.ones( ( 1, len( data[0] ) ) )
+		), axis = 0 ).max( axis = 0 )
+	data /= imax
 
 	sys.stdout.write( " Done.\n\n" )
 
@@ -72,6 +77,7 @@ def print_help():
 	print "    select * - Select the AI type to use: MLP, RBF, DTree"
 	print "    train    - Train the previously selected AI."
 	print "    play     - Play Connect Four."
+	print "    export   - Export brain of AI."
 	print
 
 
@@ -108,7 +114,10 @@ if __name__ == "__main__":
 		elif cl.startswith( "select " ):
 			cl = cl.replace( "select ", "" )
 			if cl == "MLP":
-				ai = mlp.MLP( data, targets, hidden_nodes = MLP_HIDDEN_NODES )
+				ai = mlp.MLP(
+					data, targets,
+					hidden_nodes = MLP_HIDDEN_NODES, beta = MLP_BETA, momentum = MLP_MOMENTUM
+				)
 				print "MLP created."
 			elif cl == "RBF":
 				print "ERROR: RBF not yet implemented."
@@ -131,6 +140,10 @@ if __name__ == "__main__":
 		elif cl == "play":
 			vg = game.Game( ai )
 			vg.play()
+
+		elif cl == "export":
+			ai.export()
+			print "Export completed."
 
 		elif cl != "":
 			print "Unknown command."

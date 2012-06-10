@@ -22,15 +22,21 @@ class Game:
 		self.current_height = [0] * FIELD_WIDTH
 
 
-	def input_valid( self, x ):
+	def input_validate( self, x ):
 		""" Validates the chosen column x. """
 
+		# Try to cast to a number
+		try:
+			x = int( x )
+		except:
+			return False
+
 		# Outside of game board width.
-		if x < 0 or x > FIELD_WIDTH - 1:
+		if x < 1 or x > FIELD_WIDTH:
 			return False
 
 		# Column is full.
-		if self.current_height[x] >= FIELD_HEIGHT:
+		if self.current_height[x - 1] >= FIELD_HEIGHT:
 			return False
 
 		return True
@@ -104,6 +110,20 @@ class Game:
 		return False
 
 
+	def _find_closest_target( self, ai_output ):
+		""" Find the target value the AI output is the closest to. """
+
+		closest = 100.0
+		for target in [LOSS, DRAW, WIN]:
+			diff = target - ai_output
+			if diff < 0.0:
+				diff *= -1
+			if diff < closest:
+				closest = target
+
+		return closest
+
+
 	def play( self ):
 		""" Start playing. """
 
@@ -116,10 +136,10 @@ class Game:
 			except KeyboardInterrupt: print; break
 
 			# Validate user input
-			x = int( x ) - 1
-			if not self.input_valid( x ):
+			if not self.input_validate( x ):
 				print "No valid field position!"
 				continue
+			x = int( x ) - 1
 
 			# Place human stone
 			y = self.current_height[x]
@@ -137,9 +157,11 @@ class Game:
 				break
 
 			# Place ai stone
-			pos_win = { "col": 0, "out": 0 }
-			pos_draw = { "col": 0, "out": 0 }
-			pos_loss = { "col": 0, "out": 0 }
+			opponent_win = { "col": -1, "out": 0.0 }
+			opponent_draw = { "col": -1, "out": 0.0 }
+			opponent_loss = { "col": -1, "out": 0.0 }
+			opps = [opponent_loss, opponent_draw, opponent_win]
+			targets = [LOSS, DRAW, WIN]
 
 			random.shuffle( x_range )
 			for x in x_range:
@@ -161,34 +183,36 @@ class Game:
 				ai_output = self.ai.use( ai_board_format )[0][0]
 				print x, ai_output
 
-				if round( ai_output ) == WIN:
-					diff_new = WIN - ai_output
-					diff_old = WIN - pos_win["out"]
-					pos_win["col"] = x if diff_new < diff_old else pos_win["col"]
-				elif round( ai_output ) == DRAW:
-					diff_new = DRAW - ai_output
-					diff_old = DRAW - pos_draw["out"]
-					pos_draw["col"] = x if diff_new < diff_old else pos_draw["col"]
-				elif round( ai_output ) == LOSS:
-					diff_new = LOSS - ai_output
-					diff_old = LOSS - pos_loss["out"]
-					pos_loss["col"] = x if diff_new < diff_old else pos_loss["col"]
+				# Which target is the outcome the closest to
+				closest = self._find_closest_target( ai_output )
+
+				# Find best column for each target
+				for i in range( len( targets ) ):
+					if closest == targets[i]:
+						diff_new = targets[i] - ai_output
+						diff_old = targets[i] - opps[i]["out"]
+						if diff_new < diff_old:
+							opps[i]["col"] = x
+							opps[i]["out"] = ai_output
+
 
 			# Select best possible result
-			if pos_win["col"] > 0:
-				use_pos = pos_win["col"]
-			elif pos_draw["col"] > 0:
-				use_pos = pos_draw["col"]
-			elif pos_loss["col"] > 0:
-				use_pos = pos_loss["col"]
-			# This shouldn't be possible
+			print opponent_loss, opponent_draw, opponent_win
+			if opponent_loss["col"] >= 0:
+				use_pos = opponent_loss["col"]
+			elif opponent_draw["col"] >= 0:
+				use_pos = opponent_draw["col"]
+			elif opponent_win["col"] >= 0:
+				use_pos = opponent_win["col"]
+
+			# This shouldn't happen
 			else:
 				print "-- The AI has no idea what to do and stares mindlessly at a cloud outside the window."
 				print "-- The cloud looks like a rabbit riding a pony."
 				print "-- You win by forfeit."
 				break
 
-			print "AI places stone in column " + str( use_pos ) + "."
+			print "AI places stone in column " + str( use_pos + 1 ) + "."
 			y = self.current_height[use_pos]
 			self.board[use_pos][y] = STONE_AI
 			self.current_height[use_pos] += 1
