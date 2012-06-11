@@ -213,7 +213,7 @@ class MLP:
 		return outputs
 
 
-	def export( self ):
+	def export( self, filename = MLP_EXPORT_FILE ):
 		""" Export the weight layers of the MLP. """
 
 		layer_1 = str( self.weights_layer1 )
@@ -226,8 +226,11 @@ class MLP:
 		layer_2 = layer_2.replace( ']', '' )
 		layer_2 = layer_2.replace( '  ', ' ' )
 
-		f = open( MLP_EXPORT_FILE, 'w' )
-		f.write( "# Layer 1\n" )
+		f = open( filename, 'w' )
+		f.write( "# Config:\n" )
+		f.write( "# Beta: %f  Eta: %f  Hidden nodes: %d\n" % ( MLP_BETA, MLP_ETA, MLP_HIDDEN_NODES )  )
+		f.write( "# Iterations: %d  Momentum: %f  Outtype: %s\n" % ( MLP_ITER, MLP_MOMENTUM, MLP_OUTTYPE )  )
+		f.write( "\n# Layer 1\n" )
 		f.write( layer_1 )
 		f.write( "\n\n# Layer 2\n" )
 		f.write( layer_2 )
@@ -250,6 +253,8 @@ class MLP:
 				continue
 			elif line == "# Layer 2":
 				import_layer, i = 2, 0
+				continue
+			elif line.startswith( '#' ):
 				continue
 
 			j = 0

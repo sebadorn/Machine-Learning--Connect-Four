@@ -30,6 +30,23 @@ def my_converter( x ):
 	elif x == "draw": return DRAW
 
 
+def normalize( data ):
+	""" Normalize given data. """
+
+	sys.stdout.write( " Normalizing data ..." )
+	sys.stdout.flush()
+
+	data -= data.mean( axis = 0 )
+	imax = ny.concatenate(
+		(
+			data.max( axis = 0 ) * ny.ones( ( 1, len( data[0] ) ) ),
+			data.min( axis = 0 ) * ny.ones( ( 1, len( data[0] ) ) )
+		), axis = 0 ).max( axis = 0 )
+	data /= imax
+
+	return data
+
+
 def import_traindata( file_in ):
 	""" Import the file with training data for the AI. """
 
@@ -47,14 +64,8 @@ def import_traindata( file_in ):
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
 	targets = connectfour[:,DATA_NUM_ATTR - 1:DATA_NUM_ATTR]
 
-	# Normalize
-	data -= data.mean( axis = 0 )
-	imax = ny.concatenate(
-		(
-			data.max( axis = 0 ) * ny.ones( ( 1, len( data[0] ) ) ),
-			data.min( axis = 0 ) * ny.ones( ( 1, len( data[0] ) ) )
-		), axis = 0 ).max( axis = 0 )
-	data /= imax
+	if DATA_NORMALIZE:
+		data = normalize( data )
 
 	sys.stdout.write( " Done.\n\n" )
 

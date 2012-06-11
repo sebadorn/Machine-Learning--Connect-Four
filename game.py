@@ -110,24 +110,8 @@ class Game:
 		return False
 
 
-	def _find_closest_target( self, ai_output ):
-		""" Find the target value the AI output is the closest to. """
-
-		closest = 100.0
-		for target in [LOSS, DRAW, WIN]:
-			diff = target - ai_output
-			if diff < 0.0:
-				diff *= -1
-			if diff < closest:
-				closest = target
-
-		return closest
-
-
 	def play( self ):
 		""" Start playing. """
-
-		x_range = range( FIELD_WIDTH )
 
 		while 1:
 			try:
@@ -153,18 +137,16 @@ class Game:
 				print "You won!"
 				break
 			elif winner == STONE_AI:
-				print "The ai won!"
+				print "The AI won!"
 				break
 
-			# Place ai stone
-			opponent_win = { "col": -1, "out": 0.0 }
-			opponent_draw = { "col": -1, "out": 0.0 }
-			opponent_loss = { "col": -1, "out": 0.0 }
-			opps = [opponent_loss, opponent_draw, opponent_win]
-			targets = [LOSS, DRAW, WIN]
+			# Place AI stone
+			# ("opp" as in "opponent")
+			opp_win = { "col": -1, "diff": 100.0 }
+			opp_draw = { "col": -1, "diff": 100.0 }
+			opp_loss = { "col": -1, "diff": 100.0 }
 
-			random.shuffle( x_range )
-			for x in x_range:
+			for x in range( FIELD_WIDTH ):
 				# Cell (y) in this column (x) we are currently testing
 				y = self.current_height[x]
 				if y >= FIELD_HEIGHT:
@@ -174,7 +156,7 @@ class Game:
 				board_copy = self.board.copy()
 				board_copy[x][y] = STONE_AI
 
-				# Array format for the ai: 7x6 -> 1x42
+				# Array format for the AI: 7x6 -> 1x42
 				ai_board_format = []
 				for i in range( FIELD_WIDTH ):
 					ai_board_format.extend( board_copy[i] )
@@ -183,27 +165,48 @@ class Game:
 				ai_output = self.ai.use( ai_board_format )[0][0]
 				print x, ai_output
 
-				# Which target is the outcome the closest to
-				closest = self._find_closest_target( ai_output )
+				# Difference between targets and output
+				diff_loss = LOSS - ai_output
+				diff_win = WIN - ai_output
+				diff_draw = DRAW - ai_output
 
-				# Find best column for each target
-				for i in range( len( targets ) ):
-					if closest == targets[i]:
-						diff_new = targets[i] - ai_output
-						diff_old = targets[i] - opps[i]["out"]
-						if diff_new < diff_old:
-							opps[i]["col"] = x
-							opps[i]["out"] = ai_output
+				if diff_loss < 0.0: diff_loss *= -1
+				if diff_win < 0.0: diff_win *= -1
+				if diff_draw < 0.0: diff_draw *= -1
+
+				# Close to (opponents) LOSS
+				if diff_loss <= diff_draw and diff_loss <= diff_win:
+					if diff_loss < opp_loss["diff"]:
+						opp_loss["col"] = x
+						opp_loss["diff"] = diff_loss
+
+				# Close to DRAW
+				elif diff_draw <= diff_loss and diff_draw <= diff_win:
+					if diff_draw < opp_draw["diff"]:
+						opp_draw["col"] = x
+						opp_draw["diff"] = diff_draw
+
+				# Close to (opponents) WIN
+				else:
+					if diff_win < opp_win["diff"]:
+						opp_win["col"] = x
+						opp_win["diff"] = diff_win
 
 
 			# Select best possible result
-			print opponent_loss, opponent_draw, opponent_win
-			if opponent_loss["col"] >= 0:
-				use_pos = opponent_loss["col"]
-			elif opponent_draw["col"] >= 0:
-				use_pos = opponent_draw["col"]
-			elif opponent_win["col"] >= 0:
-				use_pos = opponent_win["col"]
+			print opp_loss, opp_draw, opp_win
+
+			# We want the opponent to loose
+			if opp_loss["col"] >= 0:
+				use_pos = opp_loss["col"]
+
+			# If that is not possible, at least go for a draw
+			elif opp_draw["col"] >= 0:
+				use_pos = opp_draw["col"]
+
+			# Ugh, fine, if there is no other choice
+			elif opp_win["col"] >= 0:
+				use_pos = opp_win["col"]
 
 			# This shouldn't happen
 			else:
