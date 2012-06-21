@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 
+VERBOSE = True
 
 DATA_LIMIT = 400 # Limit data to use for training (67557 in total)
 DATA_NORMALIZE = False

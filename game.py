@@ -216,7 +216,7 @@ class Game:
 
 			# Forced move, don't ask the AI
 			if forced_move > -1 and forced_move < FIELD_WIDTH:
-				print "forced_move = %d" % forced_move
+				if VERBOSE: print "forced_move = %d" % forced_move
 				use_pos = forced_move
 			# Let the AI decide
 			else:
@@ -268,7 +268,7 @@ class Game:
 
 
 				# Select best possible result
-				print opp_loss, opp_draw, opp_win
+				if VERBOSE: print opp_loss, opp_draw, opp_win
 
 				# We want the opponent to loose
 				if opp_loss["col"] >= 0:
