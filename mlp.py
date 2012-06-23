@@ -74,9 +74,13 @@ class MLP:
 		count = 0
 
 		while ( old_val_err1 - new_val_err > MLP_ES_DIFF ) or ( old_val_err2 - old_val_err1 > MLP_ES_DIFF ):
+			if count >= MLP_ES_MAX_ITER:
+				print "[early_stopping] Reached limit of %d iterations." % MLP_ES_MAX_ITER
+				break
 			count += 1
 			if count % 10 == 0:
 				print "[early_stopping] count: %d   error: %f" % ( count, new_val_err )
+
 			self.train( eta, iterations, outtype )
 			old_val_err2 = old_val_err1
 			old_val_err1 = new_val_err
@@ -291,7 +295,7 @@ if __name__ == "__main__":
 		if out[i] == target[i]: correct += 1
 		else: print "  False: %d == %d" % ( out[i], target[i] )
 	print "Correct: %d/4" % correct
-	my_mlp.export()
-	print "Weight layers exported to %s." % MLP_EXPORT_FILE
-	my_mlp.import_weights()
-	print "Weight layers imported from %s." % MLP_EXPORT_FILE
+	my_mlp.export( "export_mlp_xor.txt" )
+	print "Weight layers exported to export_mlp_xor.txt."
+	my_mlp.import_weights( "export_mlp_xor.txt" )
+	print "Weight layers imported from export_mlp_xor.txt."
