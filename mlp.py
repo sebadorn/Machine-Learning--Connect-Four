@@ -246,31 +246,42 @@ class MLP:
 
 		f = open( filename, 'r' )
 
-		import_layer, i = 0, 0
+		values_layer1, values_layer2 = [], []
+
+		import_layer = 0
 		for line in f:
 			line = line.strip()
 			if len( line ) <= 1:
-				i = 0
 				continue
 			elif line == "# Layer 1":
-				import_layer, i = 1, 0
+				import_layer = 1
 				continue
 			elif line == "# Layer 2":
-				import_layer, i = 2, 0
+				import_layer = 2
 				continue
 			elif line.startswith( '#' ):
 				continue
 
-			j = 0
 			for value in line.split( ' ' ):
 				if value == '':
 					continue
 				value = float( value.strip() )
 				if import_layer == 1:
-					self.weights_layer1[i][j] = value
+					values_layer1.append( value )
 				elif import_layer == 2:
-					self.weights_layer2[i][j] = value
-				j += 1
+					values_layer2.append( value )
+
+		i, j = 0, 0
+		for v in values_layer1:
+			if j >= MLP_HIDDEN_NODES:
+				j = 0
+				i += 1
+			self.weights_layer1[i][j] = v
+			j += 1
+
+		i = 0
+		for v in values_layer2:
+			self.weights_layer2[i][0] = v
 			i += 1
 
 		f.close()

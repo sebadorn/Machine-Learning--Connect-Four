@@ -9,11 +9,6 @@ import mlp
 class Game:
 	""" Play a game of Connect Four. """
 
-	UP = 1
-	RIGHT = 2
-	DIAGONAL_RIGHT = 3
-	DIAGONAL_LEFT = 4
-
 
 	def __init__( self, ai ):
 		self.ai = ai
@@ -47,47 +42,160 @@ class Game:
 		return True
 
 
-	def _find_forced_move( self, x, y, direction ):
-		""" Check if the next move is a forced one and where to place the stone.
-		This function assumes, that for the given start position (x, y) three connected
-		stones have already been found. Now it checks, if it is a dangerous situation.
+	def _count_stones( self, column, row, stone, blank, ai, human ):
+		""" Compares the value of the found stone with the existing stone types.
+		Sets a stop flag if it is not possible anymore for either the human or the AI
+		to connect enough stones.
 
-		x         -- Start position (x coordinate) for the check.
-		y         -- Start position (y coordinate) for the check.
-		direction -- UP, RIGHT, DIAGONAL_LEFT or DIAGONAL_RIGHT.
+		Returns a tuple in the form: ( position of a blank field, #ai, #human, flag_to_stop ). """
+
+		flag_stop = False
+
+		if stone == STONE_BLANK:
+			# No danger/chance if there is more than one blank field in range
+			if blank != -1: flag_stop = True
+			# Save blank field. This is a candidate to place the stone.
+			else: blank = { "col": column, "row": row }
+		elif stone == STONE_AI:
+			# If there has been at least one human stone already,
+			# it is not possible for AI stones to have a connection of three and a blank field available.
+			if human > 0: flag_stop = True
+			else: ai += 1
+		elif stone == STONE_HUMAN:
+			# Same here, vice versa.
+			if ai > 0: flag_stop = True
+			else: human += 1
+
+		return ( blank, ai, human, flag_stop )
+
+
+	def _count_stones_up( self, x, y ):
+		""" From position (x,y) count the types of the next stones upwards. """
+
+		blank, ai, human = -1, 0, 0
+
+		if y + CONNECT <= FIELD_HEIGHT:
+			for i in range( CONNECT ):
+				col, row = x, y + i
+				stone = self.board[col][row]
+				blank, ai, human, flag_stop = self._count_stones( col, row, stone, blank, ai, human )
+				if flag_stop: break
+
+		return ( blank, ai, human )
+
+
+	def _count_stones_right( self, x, y ):
+		""" From position (x,y) count the types of the next stones to the right. """
+
+		blank, ai, human = -1, 0, 0
+
+		if x + CONNECT <= FIELD_WIDTH:
+			for i in range( CONNECT ):
+				col, row = x + i, y
+				stone = self.board[col][row]
+				blank, ai, human, flag_stop = self._count_stones( col, row, stone, blank, ai, human )
+				if flag_stop: break
+
+		return ( blank, ai, human )
+
+
+	def _count_stones_rightup( self, x, y ):
+		""" From position (x,y) count the types of the next stones diagonal right up. """
+
+		blank, ai, human = -1, 0, 0
+
+		if x + CONNECT <= FIELD_WIDTH and y + CONNECT < FIELD_HEIGHT:
+			for i in range( CONNECT ):
+				col, row = x + i, y + i
+				stone = self.board[col][row]
+				blank, ai, human, flag_stop = self._count_stones( col, row, stone, blank, ai, human )
+				if flag_stop: break
+
+		return ( blank, ai, human )
+
+
+	def _count_stones_rightdown( self, x, y ):
+		""" From position (x,y) count the types of the next stones diagonal right down. """
+
+		blank, ai, human = -1, 0, 0
+
+		if x + CONNECT <= FIELD_WIDTH and y - CONNECT - 1 >= 0:
+			for i in range( CONNECT ):
+				col, row = x + i, y - i
+				stone = self.board[col][row]
+				blank, ai, human, flag_stop = self._count_stones( col, row, stone, blank, ai, human )
+				if flag_stop: break
+
+		return ( blank, ai, human )
+
+
+	def _check_proposed_col( self, pos ):
+		""" Check if it is possible to place a stone in the given field.
+
+		Returns True if possible, False otherwise.
+		"""
+
+		if pos == -1:
+			return False
+
+		if pos["col"] >= 0 and pos["col"] < FIELD_WIDTH:
+			# Check if it is possible to place the stone at the needed height
+			if pos["row"] == 0 or self.board[pos["col"]][pos["row"] - 1] != STONE_BLANK:
+				return True
+
+		return False
+
+
+	def _find_forced_move( self ):
+		""" Check if the next move is a forced one and where to place the stone.
+		A forced move occurs if the human player or the AI could win the game with the next move.
 
 		Returns the position where to place the stone or -1 if not necessary.
 		"""
-		# TODO: Doesn't recognize gaps between stones. |x|x| |x|
 
 		force_x = -1
-		stone = self.board[x][y]
 
-		if direction == self.UP:
-			if y + 3 < FIELD_HEIGHT and self.board[x][y + 3] == STONE_BLANK:
-				force_x = x
+		for x in range( FIELD_WIDTH ):
+			for y in range( FIELD_HEIGHT ):
 
-		if direction == self.RIGHT:
-			if x + 3 < FIELD_WIDTH and self.board[x + 3][y] == STONE_BLANK:
-				force_x = x + 3
-			elif x - 1 >= 0 and self.board[x - 1][y] == STONE_BLANK:
-				force_x = x - 1
+				# Check: UP
+				blank, ai, human = self._count_stones_up( x, y )
+				# Evaluate: UP
+				if blank != -1:
+					# If there is a chance to win: Do it!
+					if ai == 3: return blank["col"]
+					# Remember dangerous situation for now.
+					# Maybe there will be a chance to win somewhere else!
+					elif human == 3:
+						if VERBOSE: print "[human] could win UP with %d." % blank["col"]
+						force_x = blank["col"]
 
-		if direction == self.DIAGONAL_RIGHT:
-			if x + 1 < FIELD_WIDTH and y + 1 < FIELD_HEIGHT and self.board[x + 1][y + 1] == STONE_BLANK:
-				if self.board[x + 1][y] != STONE_BLANK:
-					force_x = x + 1
-			elif x - 1 >= 0 and y - 1 >= 0 and self.board[x - 1][y - 1] == STONE_BLANK:
-				if y - 2 < 0 or self.board[x - 1][y - 2] != STONE_BLANK:
-					force_x = x - 1
+				# Check: RIGHT
+				blank, ai, human = self._count_stones_right( x, y )
+				# Evaluate: RIGHT
+				if self._check_proposed_col( blank ):
+					if ai == 3: return blank["col"]
+					elif human == 3:
+						if VERBOSE: print "[human] could win RIGHT with %d." % blank["col"]
+						force_x = blank["col"]
 
-		if direction == self.DIAGONAL_LEFT:
-			if x + 1 < FIELD_WIDTH and y - 1 >= 0 and self.board[x + 1][y - 1] == STONE_BLANK:
-				if y - 2 < 0 or self.board[x + 1][y - 2] != STONE_BLANK:
-					force_x = x + 1
-			elif x - 1 >= 0 and y + 1 < FIELD_HEIGHT and self.board[x - 1][y + 1] == STONE_BLANK:
-				if self.board[x - 1][y] != STONE_BLANK:
-					force_x = x - 1
+				# Check: DIAGONAL RIGHT UP
+				blank, ai, human = self._count_stones_rightup( x, y )
+				# Evaluate: DIAGONAL RIGHT UP
+				if self._check_proposed_col( blank ):
+					if ai == 3: return blank["col"]
+					elif human == 3:
+						if VERBOSE: print "[human] could win DIAGONAL RIGHT UP with %d." % blank["col"]
+						force_x = blank["col"]
+
+				# Check: DIAGONAL RIGHT DOWN
+				blank, ai, human = self._count_stones_rightdown( x, y )
+				# Evaluate: DIAGONAL RIGHT DOWN
+				if self._check_proposed_col( blank ):
+					if ai == 3: return blank["col"]
+					elif human == 3:
+						if VERBOSE: print "[human] could win DIAGONAL RIGHT DOWN with %d." % blank["col"]
+						force_x = blank["col"]
 
 		return force_x
 
@@ -95,78 +203,37 @@ class Game:
 	def check_win( self ):
 		""" Check the game board if someone has won.
 
-		Returns the stone value of the winner and the position for a forced move
-		(opponent has already three stones connected).
+		Returns the stone value of the winner or
+		the value of a blank stone if there is no winner yet.
 		"""
 
-		forced_move = -1
 		for x in range( FIELD_WIDTH ):
 			for y in range( FIELD_HEIGHT ):
-				stone = self.board[x][y]
 				# We only care about players, not blank fields
-				if stone == STONE_BLANK:
+				if self.board[x][y] == STONE_BLANK:
 					count = 0; continue
 
-				# Look up
-				count = 0
-				for i in range( 1, CONNECT ):
-					if y + i >= FIELD_HEIGHT:
-						break
-					# C-c-c-combo breaker!
-					if stone != self.board[x][y + i]:
-						break
-					count += 1
-				# All stones connected: Winner found!
-				if count + 1 == CONNECT:
-					return stone, forced_move
-				# One stone away from winning, next move of opponent is forced
-				if count + 1 == CONNECT - 1:
-					tmp_fm = self._find_forced_move( x, y, self.UP )
-					forced_move = tmp_fm if tmp_fm >= 0 else forced_move
+				# Check: UP
+				blank, ai, human = self._count_stones_up( x, y )
+				if ai == CONNECT: return STONE_AI
+				elif human == CONNECT: return STONE_HUMAN
 
-				# Look right
-				count = 0
-				for i in range( 1, CONNECT ):
-					if x + i >= FIELD_WIDTH:
-						break
-					if stone != self.board[x + i][y]:
-						break
-					count += 1
-				if count + 1 == CONNECT:
-					return stone, forced_move
-				if count + 1 == CONNECT - 1:
-					tmp_fm = self._find_forced_move( x, y, self.RIGHT )
-					forced_move = tmp_fm if tmp_fm >= 0 else forced_move
+				# Check: RIGHT
+				blank, ai, human = self._count_stones_right( x, y )
+				if ai == CONNECT: return STONE_AI
+				elif human == CONNECT: return STONE_HUMAN
 
-				# Look diagonal right
-				count = 0
-				for i in range( 1, CONNECT ):
-					if x + i >= FIELD_WIDTH or y + i >= FIELD_HEIGHT:
-						break
-					if stone != self.board[x + i][y + i]:
-						break
-					count += 1
-				if count + 1 == CONNECT:
-					return stone, forced_move
-				if count + 1 == CONNECT - 1:
-					tmp_fm = self._find_forced_move( x, y, self.DIAGONAL_RIGHT )
-					forced_move = tmp_fm if tmp_fm >= 0 else forced_move
+				# Check: DIAGONAL RIGHT UP
+				blank, ai, human = self._count_stones_rightup( x, y )
+				if ai == CONNECT: return STONE_AI
+				elif human == CONNECT: return STONE_HUMAN
 
-				# Look diagonal left
-				count = 0
-				for i in range( 1, CONNECT ):
-					if x - i < 0 or y + i >= FIELD_HEIGHT:
-						break
-					if stone != self.board[x - i][y + i]:
-						break
-					count += 1
-				if count + 1 == CONNECT:
-					return stone, forced_move
-				if count + 1 == CONNECT - 1:
-					tmp_fm = self._find_forced_move( x, y, self.DIAGONAL_LEFT )
-					forced_move = tmp_fm if tmp_fm >= 0 else forced_move
+				# Check: DIAGONAL RIGHT DOWN
+				blank, ai, human = self._count_stones_rightdown( x, y )
+				if ai == CONNECT: return STONE_AI
+				elif human == CONNECT: return STONE_HUMAN
 
-		return STONE_BLANK, forced_move
+		return STONE_BLANK
 
 
 	def check_board_full( self ):
@@ -200,13 +267,15 @@ class Game:
 
 			self.print_board( self.board )
 
-			winner, forced_move = self.check_win()
+			winner = self.check_win()
 			if winner == STONE_HUMAN:
 				print "You won!"
 				break
 			elif winner == STONE_AI:
 				print "The AI won!"
 				break
+
+			forced_move = self._find_forced_move()
 
 			# Place AI stone
 			# ("opp" as in "opponent")
@@ -215,7 +284,7 @@ class Game:
 			opp_loss = { "col": -1, "diff": 100.0 }
 
 			# Forced move, don't ask the AI
-			if forced_move > -1 and forced_move < FIELD_WIDTH:
+			if forced_move > -1:
 				if VERBOSE: print "forced_move = %d" % forced_move
 				use_pos = forced_move
 			# Let the AI decide
@@ -296,7 +365,7 @@ class Game:
 
 			self.print_board( self.board )
 
-			winner, forced_move = self.check_win()
+			winner = self.check_win()
 			if winner == STONE_HUMAN:
 				print "You won!"
 				break

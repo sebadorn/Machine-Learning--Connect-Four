@@ -73,6 +73,8 @@ def import_traindata( file_in ):
 
 
 def print_bold( text ):
+	""" Print bold text to the console. """
+
 	print chr( 0x1b ) + "[1m" + text + chr( 0x1b ) + "[0m"
 
 
@@ -85,10 +87,11 @@ def print_help():
 	print "    help     - Display this help."
 	print
 	print_bold( "    Handling the AI" )
-	print "    select * - Select the AI type to use: MLP, RBF, DTree"
+	print "    select * - Select the AI type to use: MLP, RBF"
 	print "    train    - Train the previously selected AI."
 	print "    play     - Play Connect Four."
 	print "    export   - Export brain of AI."
+	print "    import   - Import brain of AI."
 	print
 
 
@@ -99,6 +102,7 @@ if __name__ == "__main__":
 	print "// Type 'help' for more."
 	print
 
+	# Import data for training
 	data, targets = import_traindata( FILE_DATA )
 
 	shuffle = range( DATA_LIMIT )
@@ -117,11 +121,13 @@ if __name__ == "__main__":
 		except KeyboardInterrupt: print; break
 
 		# Evaluate user input
+
 		if cl == "exit":
 			break
 		elif cl == "help":
 			print_help()
 
+		# Select an AI
 		elif cl.startswith( "select " ):
 			cl = cl.replace( "select ", "" )
 			if cl == "MLP":
@@ -132,29 +138,37 @@ if __name__ == "__main__":
 				print "MLP created."
 			elif cl == "RBF":
 				print "ERROR: RBF not yet implemented."
-			elif cl == "DTree":
-				print "ERROR: DTree not yet implemented."
 			else:
 				print "ERROR: Unknown AI type."
 
+		# Training
 		elif cl == "train":
 			if not ai:
 				print "Training not possible. You have to select an AI type first."
 			else:
-				#ai.train()
-				ai.early_stopping(
-					valid, validtargets,
-					eta = MLP_ETA, iterations = MLP_ITER, outtype = MLP_OUTTYPE
-				)
+				if isinstance( ai, mlp.MLP ):
+					ai.early_stopping(
+						valid, validtargets,
+						eta = MLP_ETA, iterations = MLP_ITER, outtype = MLP_OUTTYPE
+					)
+				else:
+					print "Training not possible. Unknown AI."
 				print "Training completed."
 
+		# Start a game with the trained AI
 		elif cl == "play":
 			vg = game.Game( ai )
 			vg.play()
 
+		# Export the weights of the AI
 		elif cl == "export":
 			ai.export()
 			print "Export completed."
+
+		# Import weights into the AI
+		elif cl == "import":
+			ai.import_weights()
+			print "Import completed."
 
 		elif cl != "":
 			print "Unknown command."
