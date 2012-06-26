@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Vier Gewinnt – KI-Test</title>
+	<link rel="stylesheet" type="text/css" href="screen.css" />
+	<script src="game.js"></script>
+	<script src="settings.js"></script>
+</head>
+<body>
+
+<div class="settings">
+	<form>
+		<fieldset>
+			<label for="board_width">Breite</label>
+			<input type="number" id="board_width" value="7" /><br />
+			<label for="board_height">Höhe</label>
+			<input type="number" id="board_height" value="6" />
+		</fieldset>
+
+		<fieldset>
+			<select id="ann">
+				<option value="mlp">MLP</option>
+				<option value="rbf">RBF</option>
+			</select>
+		</fieldset>
+
+		<fieldset>
+			<input type="button" id="apply" value="Anwenden" />
+		</fieldset>
+	</form>
+</div>
+
+<div id="board"></div>
+
+</body>
+</html>

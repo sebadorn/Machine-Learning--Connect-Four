@@ -1,0 +1,126 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	background-color: #ededed;
+}
+
+body {
+	color: #000000;
+	font: 16px "DejaVu Sans", Arial, sans-serif;
+}
+
+input,select {
+	background-color: #ffffff;
+	border: 1px solid #d0d0d0;
+	border-radius: 2px;
+	font-size: 100%;
+	padding: 2px 4px;
+}
+
+input[type="number"] {
+	width: 60px;
+}
+
+input[type="button"]:hover {
+	border-color: #000000;
+	cursor: pointer;
+}
+
+
+/* Settings panel */
+/* -------------- */
+
+.settings {
+	background-color: #fafafa;
+	margin-bottom: 100px;
+	padding: 40px;
+	text-align: center;
+}
+
+	form {
+		display: inline-block;
+		text-align: left;
+	}
+
+	fieldset {
+		border: 0;
+		border-right: 1px solid #e0e0e0;
+		display: inline-block;
+		min-height: 60px;
+		line-height: 30px;
+		padding: 10px 14px 10px;
+		vertical-align: top;
+	}
+
+	fieldset:last-child {
+		border-right: 0;
+	}
+
+	label {
+		display: inline-block;
+		margin-right: 10px;
+		text-align: right;
+		width: 60px;
+	}
+
+	#apply {
+		background-color: #e8e8e8;
+		box-shadow: inset 0 13px 6px 0 #ffffff;
+		font-size: 90%;
+		padding: 6px 10px;
+	}
+
+
+/* Game board */
+/* ---------- */
+
+#board {
+	text-align: center;
+}
+
+.column {
+	background-color: rgba( 40, 100, 160, 0.7 );
+	border: 1px solid #606060;
+	border-bottom-width: 20px;
+	border-left: 0;
+	display: inline-block;
+	position: relative;
+	z-index: 1;
+}
+
+.column:first-child {
+	border-left: 1px solid #606060;
+}
+
+.column:hover {
+	background-color: rgba( 40, 100, 160, 0.4 );
+	cursor: pointer;
+	z-index: 2;
+}
+
+.field {
+	border-radius: 100px;
+	display: block;
+	left: 0;
+	position: absolute;
+	-o-transform: scale( 0.8, 0.8 );
+	-webkit-transform: scale( 0.8, 0.8 );
+	-moz-transform: scale( 0.8, 0.8 );
+	transform: scale( 0.8, 0.8 );
+	z-index: 10;
+}
+
+.blank {
+	background-color: #ffffff;
+}
+
+.human {
+	background-color: #f0f000;
+}
+
+.ai {
+	background-color: #f00000;
+}
