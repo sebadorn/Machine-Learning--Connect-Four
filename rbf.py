@@ -122,7 +122,7 @@ if __name__ == "__main__":
 	print "Testing RBF with XOR:"
 
 	my_rbf = RBF( inputs, targets, rbfs_amount = 4 )
-	my_rbf.train( eta = 0.2, iterations = 1000 )
+	my_rbf.train( eta = 0.6, iterations = 1000 )
 
 	out = [
 		my_rbf.use( [0,0] ), my_rbf.use( [0,1] ),
@@ -131,11 +131,10 @@ if __name__ == "__main__":
 
 	correct = 0
 	for i in range( 4 ):
-		print out[i]
-		#if out[i] == targets[i]: correct += 1
-		#else: print "  False: %d == %d" % ( out[i], targets[i] )
+		if out[i] == targets[i][0]: correct += 1
+		else: print "  False: %d == %d" % ( out[i], targets[i][0] )
 
-	# print "Correct: %d/4" % correct
+	print "Correct: %d/4" % correct
 
 	# my_mlp.export()
 	# print "Weight layers exported to %s." % MLP_EXPORT_FILE
