@@ -119,7 +119,7 @@ class Game:
 
 		blank, ai, human = -1, 0, 0
 
-		if x + CONNECT <= FIELD_WIDTH and y - CONNECT - 1 >= 0:
+		if x + CONNECT <= FIELD_WIDTH and y - CONNECT + 1 >= 0:
 			for i in range( CONNECT ):
 				col, row = x + i, y - i
 				stone = self.board[col][row]

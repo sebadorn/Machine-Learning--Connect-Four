@@ -117,11 +117,11 @@ class RBF:
 if __name__ == "__main__":
 	# Test the neuronal networks with a simple problem: XOR.
 	inputs  = [[0,0], [0,1], [1,0], [1,1]]
-	targets = [[1,0], [0,1], [0,1], [1,0]]
+	targets = [[0], [1], [1], [0]]
 
 	print "Testing RBF with XOR:"
 
-	my_rbf = RBF( inputs, targets, rbfs_amount = 2 )
+	my_rbf = RBF( inputs, targets, rbfs_amount = 4 )
 	my_rbf.train( eta = 0.2, iterations = 1000 )
 
 	out = [
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 		#if out[i] == targets[i]: correct += 1
 		#else: print "  False: %d == %d" % ( out[i], targets[i] )
 
-	print "Correct: %d/4" % correct
+	# print "Correct: %d/4" % correct
 
 	# my_mlp.export()
 	# print "Weight layers exported to %s." % MLP_EXPORT_FILE
