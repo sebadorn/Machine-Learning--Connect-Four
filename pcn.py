@@ -18,37 +18,36 @@ class Perceptron:
 		targets --
 		"""
 
-		self.inputs = inputs
-		self.targets = targets
-
-		self.nodes_in = len( self.inputs[0] )
-		self.nodes_out = len( self.targets[0] )
-		self.data_amount = len( self.inputs )
-
-		# Add bias node
-		ones = -ny.ones( ( self.data_amount, 1 ) )
-		self.inputs = ny.concatenate( ( self.inputs, ones ), axis = 1 )
+		self.nodes_in = len( inputs[0] )
+		self.nodes_out = len( targets[0] )
+		self.data_amount = len( inputs )
 
 		self.weights = ny.random.rand( self.nodes_in + 1, self.nodes_out ) * 0.1 - 0.05
 
 
-	def train( self, eta, iterations ):
+	def train( self, inputs, targets, eta, iterations ):
 		""" Train the perceptron.
 
+		inputs     --
+		targets    --
 		eta        --
 		iterations --
 		"""
 
+		# Add bias node
+		ones = -ny.ones( ( self.data_amount, 1 ) )
+		inputs = ny.concatenate( ( inputs, ones ), axis = 1 )
+
 		change = range( self.data_amount )
 		for n in range( iterations ):
-			self.outputs = self._forward( self.inputs )
+			outputs = self._forward( inputs )
+			trans_in = ny.transpose( inputs )
 
-			trans_in = ny.transpose( self.inputs )
-			self.weights += eta * ny.dot( trans_in, self.targets - self.outputs )
+			self.weights += eta * ny.dot( trans_in, targets - outputs )
 
 			ny.random.shuffle( change )
-			self.inputs = self.inputs[change,:]
-			self.targets = self.targets[change,:]
+			inputs = inputs[change,:]
+			targets = targets[change,:]
 
 
 	def _forward( self, inputs ):

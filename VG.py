@@ -137,7 +137,10 @@ if __name__ == "__main__":
 				)
 				print "MLP created."
 			elif cl == "RBF":
-				print "ERROR: RBF not yet implemented."
+				ai = rbf.RBF(
+					data, targets,
+					sigma = RBF_SIGMA, rbfs_amount = RBF_NODES, use_kmeans = RBF_KMEANS, normalize = RBF_NORMALIZE
+				)
 			else:
 				print "ERROR: Unknown AI type."
 
@@ -151,6 +154,8 @@ if __name__ == "__main__":
 						valid, validtargets,
 						eta = MLP_ETA, iterations = MLP_ITER, outtype = MLP_OUTTYPE
 					)
+				elif isinstance( ai, rbf.RBF ):
+					ai.train( eta = RBF_ETA, iterations = RBF_ITER )
 				else:
 					print "Training not possible. Unknown AI."
 				print "Training completed."

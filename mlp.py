@@ -140,8 +140,8 @@ class MLP:
 		elif self.outtype == "logistic":
 			outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
 		elif self.outtype == 'softmax':
-			normalisers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
-			outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalisers )
+			normalizers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
+			outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalizers )
 		else:
 			print "ERROR: Unknown outtype = %s" % outtype
 
@@ -306,7 +306,9 @@ if __name__ == "__main__":
 		if out[i] == target[i]: correct += 1
 		else: print "  False: %d == %d" % ( out[i], target[i] )
 	print "Correct: %d/4" % correct
-	my_mlp.export( "export_mlp_xor.txt" )
-	print "Weight layers exported to export_mlp_xor.txt."
-	my_mlp.import_weights( "export_mlp_xor.txt" )
-	print "Weight layers imported from export_mlp_xor.txt."
+
+	export_file = "export_mlp_xor.txt"
+	my_mlp.export( export_file )
+	print "Weight layers exported to %s." % export_file
+	my_mlp.import_weights( export_file )
+	print "Weight layers imported from %s." % export_file
