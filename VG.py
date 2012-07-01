@@ -3,7 +3,7 @@
 
 from global_vars import *
 import os, sys, numpy as ny
-import mlp, game
+import mlp, rbf, game
 
 
 # Explanation for the trainings data:

@@ -35,7 +35,7 @@ class RBF:
 		self.normalize = normalize
 
 		if self.use_kmeans:
-			self.kmeans_net = kmeans.kmeans( self.rbfs_amount, self.inputs )
+			self.kmeans_net = kmeans.kmeans( self.rbfs_amount )
 
 		self.hidden = ny.zeros( ( self.data_amount, self.rbfs_amount + 1 ) )
 
@@ -53,8 +53,8 @@ class RBF:
 	def train( self, eta = 0.25, iterations = 100 ):
 		""" Train the network.
 
-		eta        -- 
-		iterations -- 
+		eta        -- Learning rate.
+		iterations -- Number of rounds to the train the perceptron.
 		"""
 
 		if self.use_kmeans == False:
@@ -73,7 +73,7 @@ class RBF:
 		""" Use input data on the RBFs with the activation function.
 
 		inputs -- Input data to use on the activation function.
-		hidden -- 
+		hidden -- Hidden layer of nodes.
 		"""
 
 		ones_input = ny.ones( ( 1, self.nodes_in ) )
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
 	print "Testing RBF with XOR:"
 
-	my_rbf = RBF( inputs, targets, sigma = 1, rbfs_amount = 4 )
+	my_rbf = RBF( inputs, targets, sigma = 1, rbfs_amount = 4, use_kmeans = True )
 	my_rbf.train( eta = 0.2, iterations = 400 )
 
 	out = [
