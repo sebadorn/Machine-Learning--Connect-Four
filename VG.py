@@ -137,8 +137,16 @@ if __name__ == "__main__":
 				)
 				print "MLP created."
 			elif cl == "RBF":
+				# Adjust target format for RBF: [win, draw, loss]
+				targets_rbf = ny.zeros( ( len( targets ), 3 ) )
+				for i in range( len( targets ) ):
+					win = 1 if targets[i] == WIN else 0
+					draw = 1 if targets[i] == DRAW else 0
+					loss = 1 if targets[i] == LOSS else 0
+					targets_rbf[i] = [win, draw, loss]
+
 				ai = rbf.RBF(
-					data, targets,
+					data, targets_rbf,
 					sigma = RBF_SIGMA, rbfs_amount = RBF_NODES, use_kmeans = RBF_KMEANS, normalize = RBF_NORMALIZE
 				)
 			else:

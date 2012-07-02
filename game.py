@@ -3,7 +3,7 @@
 
 from global_vars import *
 import sys, random, numpy as ny
-import mlp
+import mlp, rbf
 
 
 class Game:
@@ -305,8 +305,12 @@ class Game:
 						ai_board_format.extend( board_copy[i] )
 
 					# Get the possible outcome
-					ai_output = self.ai.use( ai_board_format )[0][0]
-					print x, ai_output
+					if isinstance( self.ai, mlp.MLP ):
+						ai_output = self.ai.use( ai_board_format )[0][0]
+					elif isinstance( self.ai, rbf.RBF ):
+						ai_output = self.ai.use( ai_board_format )
+
+					if VERBOSE: print "Col: %d  Out: %f" % ( x, ai_output )
 
 					# Difference between targets and output
 					diff_loss = LOSS - ai_output
