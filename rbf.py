@@ -102,7 +102,8 @@ class RBF:
 		# Bias node
 		hidden[:,-1] = -1
 		# Run through perceptron and get activations
-		outputs = self.perceptron.use( hidden )
+		outputs = self.perceptron._forward( hidden )
+		# outputs = self.perceptron.use( hidden )
 
 		return outputs
 
@@ -137,8 +138,8 @@ if __name__ == "__main__":
 
 	correct = 0
 	for i in range( len( out ) ):
-		if out[i] == out_targets[i][0]: correct += 1
-		else: print "  False: %d == %d" % ( out[i], out_targets[i][0] )
+		if out[i][0] == out_targets[i][0]: correct += 1
+		else: print "  False: %d == %d" % ( out[i][0], out_targets[i][0] )
 
 	print "Correct: %d/%d" % ( correct, len( out ) )
 

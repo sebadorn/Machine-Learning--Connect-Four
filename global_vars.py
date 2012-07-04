@@ -3,7 +3,7 @@
 
 VERBOSE = True
 
-DATA_LIMIT = 1000 # Limit data to use for training (67557 in total)
+DATA_LIMIT = 2000 # Limit data to use for training (67557 in total)
 DATA_NORMALIZE = False
 
 # Game board
@@ -38,5 +38,5 @@ RBF_EXPORT_FILE = "export_rbf.txt"
 RBF_ITER = 100
 RBF_KMEANS = True
 RBF_NODES = 80
-RBF_NORMALIZE = False
+RBF_NORMALIZE = True
 RBF_SIGMA = 0

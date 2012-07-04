@@ -70,7 +70,9 @@ class Perceptron:
 		Returns the classification by the perceptron. Which either 1 or 0.
 		"""
 
-		output = ny.dot( inputs, self.weights )
-		activation_sum = ny.sum( output )
+		# output = ny.dot( inputs, self.weights )
+		# activation_sum = ny.sum( output )
 
-		return 1 if activation_sum > 0 else 0
+		# return 1 if activation_sum > 0 else 0
+
+		return self._forward( inputs )

@@ -9,9 +9,22 @@ import mlp, rbf
 class Game:
 	""" Play a game of Connect Four. """
 
+	FLAG_MLP = 1
+	FLAG_RBF = 2
+
 
 	def __init__( self, ai ):
+		""" Constructor.
+
+		ai -- Trained instance of game AI.
+		"""
+
 		self.ai = ai
+		if isinstance( ai, mlp.MLP ):
+			self.ai_flag = self.FLAG_MLP
+		elif isinstance( ai, rbf.RBF ):
+			self.ai_flag = self.FLAG_RBF
+
 		self._init_field()
 
 
@@ -304,40 +317,49 @@ class Game:
 					for i in range( FIELD_WIDTH ):
 						ai_board_format.extend( board_copy[i] )
 
+
 					# Get the possible outcome
-					if isinstance( self.ai, mlp.MLP ):
+					# MLP
+					if self.ai_flag == self.FLAG_MLP:
 						ai_output = self.ai.use( ai_board_format )[0][0]
-					elif isinstance( self.ai, rbf.RBF ):
-						ai_output = self.ai.use( ai_board_format )
 
-					if VERBOSE: print "Col: %d  Out: %f" % ( x, ai_output )
+						# Difference between targets and output
+						diff_loss = LOSS - ai_output
+						diff_win = WIN - ai_output
+						diff_draw = DRAW - ai_output
+						if diff_loss < 0.0: diff_loss *= -1
+						if diff_win < 0.0: diff_win *= -1
+						if diff_draw < 0.0: diff_draw *= -1
 
-					# Difference between targets and output
-					diff_loss = LOSS - ai_output
-					diff_win = WIN - ai_output
-					diff_draw = DRAW - ai_output
+						if VERBOSE: print "Col: %d  Out: %f" % ( x, ai_output )
 
-					if diff_loss < 0.0: diff_loss *= -1
-					if diff_win < 0.0: diff_win *= -1
-					if diff_draw < 0.0: diff_draw *= -1
+						# Close to (opponents) LOSS
+						if diff_loss <= diff_draw and diff_loss <= diff_win:
+							if diff_loss < opp_loss["diff"]:
+								opp_loss["col"] = x
+								opp_loss["diff"] = diff_loss
 
-					# Close to (opponents) LOSS
-					if diff_loss <= diff_draw and diff_loss <= diff_win:
-						if diff_loss < opp_loss["diff"]:
-							opp_loss["col"] = x
-							opp_loss["diff"] = diff_loss
+						# Close to DRAW
+						elif diff_draw <= diff_loss and diff_draw <= diff_win:
+							if diff_draw < opp_draw["diff"]:
+								opp_draw["col"] = x
+								opp_draw["diff"] = diff_draw
 
-					# Close to DRAW
-					elif diff_draw <= diff_loss and diff_draw <= diff_win:
-						if diff_draw < opp_draw["diff"]:
-							opp_draw["col"] = x
-							opp_draw["diff"] = diff_draw
+						# Close to (opponents) WIN
+						else:
+							if diff_win < opp_win["diff"]:
+								opp_win["col"] = x
+								opp_win["diff"] = diff_win
 
-					# Close to (opponents) WIN
-					else:
-						if diff_win < opp_win["diff"]:
-							opp_win["col"] = x
-							opp_win["diff"] = diff_win
+					# RBF
+					elif self.ai_flag == self.FLAG_RBF:
+						win, draw, loss = self.ai.use( ai_board_format )[0]
+
+						if VERBOSE: print "Col: %d  Out: %d/%d/%d" % ( x, win, draw, loss )
+
+						if loss == 1: opp_loss["col"] = x
+						elif draw == 1: opp_draw["col"] = x
+						elif win == 1: opp_win["col"] = x
 
 
 				# Select best possible result
