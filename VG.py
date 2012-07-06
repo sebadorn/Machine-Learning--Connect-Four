@@ -87,11 +87,12 @@ def print_help():
 	print "    help     - Display this help."
 	print
 	print_bold( "    Handling the AI" )
-	print "    select * - Select the AI type to use: MLP, RBF"
-	print "    train    - Train the previously selected AI."
-	print "    play     - Play Connect Four."
-	print "    export   - Export brain of AI."
-	print "    import   - Import brain of AI."
+	print "    select *  - Select the AI type to use: MLP, RBF"
+	print "    train     - Train the previously selected AI."
+	print "    play      - Play Connect Four."
+	print "    export    - Export brain of AI."
+	print "    export_js - Export brain of AI as Javascript."
+	print "    import    - Import brain of AI."
 	print
 
 
@@ -176,6 +177,10 @@ if __name__ == "__main__":
 		# Export the weights of the AI
 		elif cl == "export":
 			ai.export()
+			print "Export completed."
+
+		elif cl == "export_js":
+			ai.export_js()
 			print "Export completed."
 
 		# Import weights into the AI

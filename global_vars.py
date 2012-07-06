@@ -27,6 +27,7 @@ MLP_ES_DIFF = 0.1 # Error difference in early stopping
 MLP_ES_MAX_ITER = 240
 MLP_ETA = 0.4
 MLP_EXPORT_FILE = "export_mlp.txt"
+MLP_EXPORT_FILE_JS = "web/export_mlp.js"
 MLP_HIDDEN_NODES = 20
 MLP_ITER = 100
 MLP_MOMENTUM = 0.7
@@ -35,8 +36,13 @@ MLP_OUTTYPE = "linear"
 # Config RBF
 RBF_ETA = 0.4
 RBF_EXPORT_FILE = "export_rbf.txt"
+RBF_EXPORT_FILE_JS = "web/export_rbf.js"
 RBF_ITER = 100
 RBF_KMEANS = True
 RBF_NODES = 80
 RBF_NORMALIZE = True
 RBF_SIGMA = 0
+
+# Config DTree
+DT_EXPORT_FILE = "export_dtree.txt"
+DT_EXPORT_FILE_JS = "web/export_dtree.js"

@@ -25,6 +25,20 @@ var Game = {
 		fields: null
 	},
 
+	MLP: {
+		beta: 1.0,
+		weights_1: null,
+		weights_2: null
+	},
+
+	RBF: {
+
+	},
+
+	DTree: {
+
+	},
+
 
 	/**
 	 * Initialise game board.
@@ -75,6 +89,48 @@ var Game = {
 	 */
 	set_stone: function( x, y, stone ) {
 		// TODO
+	},
+
+
+	/**
+	 * Use the trained MLP.
+	 * @param {Array} inputs
+	 * @return {Array} outputs
+	 */
+	use_mlp: function( inputs ) {
+		var exp;
+
+		// Add bias node
+		inputs[inputs.length] = -1.0;
+
+		// Activation in hidden layer
+		hidden = dotproduct( inputs, Game.MLP.weights_1 );
+		for( var i = 0; i < hidden.length; i++ ) {
+			exp = Math.exp( -1.0 * Game.MLP.beta * hidden[i] );
+			hidden[i] = 1.0 / ( 1.0 + exp );
+		}
+
+		// Add bias node
+		hidden[hidden.length] = -1.0;
+
+		// Activation in output layer
+		outputs = dotproduct( hidden, Game.MLP.weights_2 );
+		for( var i = 0; i < outputs.length; i++ ) {
+			exp = Math.exp( -1.0 * Game.MLP.beta * outputs[i] );
+			outputs[i] = 1.0 / ( 1.0 + exp );
+		}
+
+		return outputs;
 	}
 
 };
+
+
+/**
+ * Source: http://c2.com/cgi/wiki?DotProductInManyProgrammingLanguages
+ */
+function dotproduct( a, b ) {
+	var n = 0, lim = Math.min( a.length, b.length );
+	for( var i = 0; i < lim; i++ ) { n += a[i] * b[i]; }
+	return n;
+}

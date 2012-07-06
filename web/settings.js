@@ -27,6 +27,8 @@ window.addEventListener( "DOMContentLoaded", function() {
 	selectANN = document.getElementById( "ann" );
 	buttonApply.addEventListener( "click", settings_apply, false );
 
+	Game.MLP.weights_1 = MLP_weights_1;
+	Game.MLP.weights_2 = MLP_weights_2;
 	Game.init_board( DEFAULT_COLS, DEFAULT_ROWS );
 
 }, false );

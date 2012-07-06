@@ -241,6 +241,26 @@ class MLP:
 		f.close()
 
 
+	def export_js( self, filename = MLP_EXPORT_FILE_JS ):
+		""" Export the weight layers of the MLP as Javascript. """
+
+		layers = [str( self.weights_layer1 ), str( self.weights_layer2 )]
+		for i in range( len( layers ) ):
+			layers[i] = layers[i].replace( "  ", " " ).replace( "  ", " " )
+			layers[i] = layers[i].replace( " ", ", " )
+			layers[i] = layers[i].replace( "]", "]," )
+			layers[i] = layers[i].replace( "[,", "[" ).replace( "[[", "[" )
+			layers[i] = layers[i].replace( "],],", "]" )
+			layers[i] = layers[i].replace( ", [", "[" )
+
+		f = open( filename, 'w' )
+		for i in range( len( layers ) ):
+			f.write( "var MLP_weights_" + str( i + 1 ) + " = new Array(" )
+			f.write( layers[i] )
+			f.write( ");" )
+		f.close()
+
+
 	def import_weights( self, filename = MLP_EXPORT_FILE ):
 		""" Imports weight layers from a file. """
 
