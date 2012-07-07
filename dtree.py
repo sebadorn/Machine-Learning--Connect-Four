@@ -125,18 +125,6 @@ class DTree:
 
 		return lst
 
-		# if not data:
-		# 	return lst
-		# else:
-		# 	record = data.pop()
-		# 	if record[attr] == value:
-		# 		lst.append( record )
-		# 		lst.extend( self._get_examples( data, attr, value ) )
-		# 		return lst
-		# 	else:
-		# 		lst.extend( self._get_examples( data, attr, value ) )
-		# 		return lst
-
 
 	def _entropy( self, data, target_attr ):
 		"""
