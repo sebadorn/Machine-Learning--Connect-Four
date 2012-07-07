@@ -118,34 +118,24 @@ class DTree:
 		data = data[:]
 		lst = []
 
-		if not data:
-			return lst
-		else:
+		while len( data ) > 0:
 			record = data.pop()
 			if record[attr] == value:
 				lst.append( record )
-				lst.extend( self._get_examples( data, attr, value ) )
-				return lst
-			else:
-				lst.extend( self._get_examples( data, attr, value ) )
-				return lst
 
+		return lst
 
-	# def classify( self, data, tree = None ):
-	# 	"""
-	# 	Returns a list of classifications for each of the records in the data.
-	# 	"""
-
-	#	if tree is None:
-	#		tree = self.tree
-
-	# 	data = data[:]
-	# 	classification = []
-
-	# 	for record in data:
-	# 		classification.append( self.use( record, tree ) )
-
-	# 	return classification
+		# if not data:
+		# 	return lst
+		# else:
+		# 	record = data.pop()
+		# 	if record[attr] == value:
+		# 		lst.append( record )
+		# 		lst.extend( self._get_examples( data, attr, value ) )
+		# 		return lst
+		# 	else:
+		# 		lst.extend( self._get_examples( data, attr, value ) )
+		# 		return lst
 
 
 	def _entropy( self, data, target_attr ):
@@ -212,7 +202,7 @@ class DTree:
 
 if __name__ == "__main__":
 	# Test the neuronal networks with a simple problem: XOR.
-	attributes = ["a", "b", "r"]
+	attributes = ["a", "b", "xor"]
 	inputs = [[0,0,"no"], [0,1,"yes"], [1,0,"yes"], [1,1,"no"]]
 
 	data = []
@@ -225,11 +215,11 @@ if __name__ == "__main__":
 	my_dtree.train()
 
 	out = [
-		my_dtree.use( {"a":0,"b":0} ), my_dtree.use( {"a":0,"b":1} ),
+		my_dtree.use( {"a":0,"b":1} ), my_dtree.use( {"a":0,"b":1} ),
 		my_dtree.use( {"a":1,"b":0} ), my_dtree.use( {"a":1,"b":1} ),
-		my_dtree.use( {"a":1,"b":1} ), my_dtree.use( {"a":0,"b":1} )
+		my_dtree.use( {"a":1,"b":1} ), my_dtree.use( {"a":0,"b":0} )
 	]
-	targets = ["no", "yes", "yes", "no", "no", "yes"]
+	targets = ["yes", "yes", "yes", "no", "no", "no"]
 
 	correct = 0
 	for i in range( len( targets ) ):
@@ -237,8 +227,8 @@ if __name__ == "__main__":
 		else: print "  False: %s == %s" % ( out[i], targets[i] )
 	print "Correct: %d/%d" % ( correct, len( targets ) )
 
-	# export_file = "export_mlp_xor.txt"
-	# my_mlp.export( export_file )
-	# print "Weight layers exported to %s." % export_file
-	# my_mlp.import_weights( export_file )
-	# print "Weight layers imported from %s." % export_file
+	# export_file = "export_dtree_xor.txt"
+	# my_dtree.export( export_file )
+	# print "Tree exported to %s." % export_file
+	# my_dtree.import_weights( export_file )
+	# print "Tree imported from %s." % export_file

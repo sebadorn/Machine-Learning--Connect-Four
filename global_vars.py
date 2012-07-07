@@ -46,3 +46,4 @@ RBF_SIGMA = 0
 # Config DTree
 DT_EXPORT_FILE = "export_dtree.txt"
 DT_EXPORT_FILE_JS = "web/export_dtree.js"
+DT_TARGET_ATTRIBUTE = "outcome"

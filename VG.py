@@ -15,6 +15,13 @@ import mlp, rbf, dtree, game
 FILE_DATA = "connect-4.data"
 # Number of attributes in each line
 DATA_NUM_ATTR = 43
+# Name of the attributes. Needed for the DTree.
+DATA_ATTRIBUTES = [
+	"a1","a2","a3","a4","a5","a6","b1","b2","b3","b4","b5","b6",
+	"c1","c2","c3","c4","c5","c6","d1","d2","d3","d4","d5","d6",
+	"e1","e2","e3","e4","e5","e6","f1","f2","f3","f4","f5","f6",
+	"g1","g2","g3","g4","g5","g6", DT_TARGET_ATTRIBUTE
+]
 
 
 def my_converter( x ):
@@ -57,8 +64,12 @@ def import_traindata( file_in ):
 	# A dict where the key is the index for each attribute.
 	# The value for each key is the same function to replace the string with a float.
 	convs = dict( zip( range( DATA_NUM_ATTR + 1 ) , [my_converter] * DATA_NUM_ATTR ) )
-
 	connectfour = ny.loadtxt( file_in, delimiter = ',', converters = convs )
+
+	cf_original = []
+	f = open( file_in, "r" )
+	for line in f:
+		cf_original.append( line.split( ',' ) )
 
 	# Split in data and targets
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
@@ -69,7 +80,7 @@ def import_traindata( file_in ):
 
 	sys.stdout.write( " Done.\n\n" )
 
-	return data, targets
+	return data, targets, cf_original
 
 
 def print_bold( text ):
@@ -96,6 +107,75 @@ def print_help():
 	print
 
 
+def select_ai( cl, data, targets, original_import ):
+	"""
+	Select an AI. Create in instance of the needed class and return it.
+	"""
+	ai = None
+
+	# MLP
+	if cl == "MLP":
+		ai = mlp.MLP(
+			data, targets,
+			hidden_nodes = MLP_HIDDEN_NODES, beta = MLP_BETA, momentum = MLP_MOMENTUM
+		)
+		print "MLP created."
+
+	# RBF
+	elif cl == "RBF":
+		# Adjust target format for RBF: [win, draw, loss]
+		targets_rbf = ny.zeros( ( len( targets ), 3 ) )
+		for i in range( len( targets ) ):
+			win = 1 if targets[i] == WIN else 0
+			draw = 1 if targets[i] == DRAW else 0
+			loss = 1 if targets[i] == LOSS else 0
+			targets_rbf[i] = [win, draw, loss]
+
+		ai = rbf.RBF(
+			data, targets_rbf,
+			sigma = RBF_SIGMA, rbfs_amount = RBF_NODES, use_kmeans = RBF_KMEANS, normalize = RBF_NORMALIZE
+		)
+
+	# DTree
+	elif cl == "DTree":
+		data = []
+		for value in original_import:
+			zipped = zip( DATA_ATTRIBUTES, [datum for datum in value] )
+			data.append( dict( zipped ) )
+		ai = dtree.DTree( data, DATA_ATTRIBUTES, DT_TARGET_ATTRIBUTE )
+
+	return ai
+
+
+def train_ai( ai, valid, validtargets ):
+	"""
+	Train the previously selected AI.
+	"""
+
+	if not ai:
+		print "Training not possible. You have to select an AI type first."
+	else:
+		# MLP
+		if isinstance( ai, mlp.MLP ):
+			ai.early_stopping(
+				valid, validtargets,
+				eta = MLP_ETA, iterations = MLP_ITER, outtype = MLP_OUTTYPE
+			)
+
+		# RBF
+		elif isinstance( ai, rbf.RBF ):
+			ai.train( eta = RBF_ETA, iterations = RBF_ITER )
+
+		# DTree
+		elif isinstance( ai, dtree.DTree ):
+			ai.train()
+
+		else:
+			print "Training not possible. Unknown AI."
+
+		print "Training completed."
+
+
 
 if __name__ == "__main__":
 	print "// Training an artificial intelligence to play Connect Four."
@@ -104,7 +184,7 @@ if __name__ == "__main__":
 	print
 
 	# Import data for training
-	data, targets = import_traindata( FILE_DATA )
+	data, targets, original_import = import_traindata( FILE_DATA )
 
 	shuffle = range( DATA_LIMIT )
 	ny.random.shuffle( shuffle )
@@ -121,8 +201,6 @@ if __name__ == "__main__":
 		except EOFError: print; break
 		except KeyboardInterrupt: print; break
 
-		# Evaluate user input
-
 		if cl == "exit":
 			break
 		elif cl == "help":
@@ -131,43 +209,14 @@ if __name__ == "__main__":
 		# Select an AI
 		elif cl.startswith( "select " ):
 			cl = cl.replace( "select ", "" )
-			if cl == "MLP":
-				ai = mlp.MLP(
-					data, targets,
-					hidden_nodes = MLP_HIDDEN_NODES, beta = MLP_BETA, momentum = MLP_MOMENTUM
-				)
-				print "MLP created."
-			elif cl == "RBF":
-				# Adjust target format for RBF: [win, draw, loss]
-				targets_rbf = ny.zeros( ( len( targets ), 3 ) )
-				for i in range( len( targets ) ):
-					win = 1 if targets[i] == WIN else 0
-					draw = 1 if targets[i] == DRAW else 0
-					loss = 1 if targets[i] == LOSS else 0
-					targets_rbf[i] = [win, draw, loss]
 
-				ai = rbf.RBF(
-					data, targets_rbf,
-					sigma = RBF_SIGMA, rbfs_amount = RBF_NODES, use_kmeans = RBF_KMEANS, normalize = RBF_NORMALIZE
-				)
-			else:
-				print "ERROR: Unknown AI type."
+			ai = select_ai( cl, data, targets, original_import )
+			if ai is None:
+				print "ERROR: Unknown AI."
 
 		# Training
 		elif cl == "train":
-			if not ai:
-				print "Training not possible. You have to select an AI type first."
-			else:
-				if isinstance( ai, mlp.MLP ):
-					ai.early_stopping(
-						valid, validtargets,
-						eta = MLP_ETA, iterations = MLP_ITER, outtype = MLP_OUTTYPE
-					)
-				elif isinstance( ai, rbf.RBF ):
-					ai.train( eta = RBF_ETA, iterations = RBF_ITER )
-				else:
-					print "Training not possible. Unknown AI."
-				print "Training completed."
+			train_ai( ai, valid, validtargets )
 
 		# Start a game with the trained AI
 		elif cl == "play":

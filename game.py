@@ -3,7 +3,7 @@
 
 from global_vars import *
 import sys, random, numpy as ny
-import mlp, rbf
+import mlp, rbf, dtree
 
 
 class Game:
@@ -11,6 +11,7 @@ class Game:
 
 	FLAG_MLP = 1
 	FLAG_RBF = 2
+	FLAG_DTREE = 3
 
 
 	def __init__( self, ai ):
@@ -24,6 +25,8 @@ class Game:
 			self.ai_flag = self.FLAG_MLP
 		elif isinstance( ai, rbf.RBF ):
 			self.ai_flag = self.FLAG_RBF
+		elif isinstance( ai, dtree.DTree ):
+			self.ai_flag = self.FLAG_DTREE
 
 		self._init_field()
 
