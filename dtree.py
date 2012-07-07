@@ -6,227 +6,239 @@ import numpy as ny
 
 
 class DTree:
-	""" Decision Tree.
-	Code based on chapter 6 of 'Machine Learning: An Algorithmic Perspective' by Stephen Marsland.
-	(http://seat.massey.ac.nz/personal/s.r.marsland/MLBook.html)
+	"""
+	Decision Tree.
+	Code based on the code to the article "Building Decision Trees in Python - O'Reilly Media".
+	(http://onlamp.com/pub/a/python/2006/02/09/ai_decision_trees.html)
 	"""
 
 
-	def __init__( self ):
-		""" Constructor. """
-
-
-	def classify( self, tree, datapoint ):
+	def __init__( self, data, attributes, target_attr ):
+		"""
+		Constructor.
 		"""
 
-		tree      --
-		datapoint --
+		self.data = data[:]
+		self.attributes = attributes[:]
+		self.target_attr = target_attr
+		self.tree = None
+
+
+	def train( self ):
+		"""
+		Build the decision tree.
 		"""
 
-		# Reached a leaf
-		if type( tree ) == type( "string "):
-			return tree
-		# Not a leaf, proceed
-		else:
-			a = tree.keys()[0]
-			for i in range( len( self.feature_names ) ):
-				if self.feature_names[i] == a:
-					break
-
-			try:
-				t = tree[a][datapoint[i]]
-				return self.classify( t, datapoint )
-			except:
-				return None
+		self.tree = self._make_tree( self.data, self.attributes, self.target_attr )
 
 
-	def classify_all( self, tree, data ):
+	def _make_tree( self, data, attributes, target_attr ):
+		"""
+		Build the decision tree.
 		"""
 
-		tree --
-		data --
-		"""
+		data = data[:]
+		values = [record[self.target_attr] for record in data]
+		default = self._majority_value( data, target_attr )
 
-		results = []
-		for i in range( len( data ) ):
-			results.append( self.classify( tree, data[i] ) )
-
-		return results
-
-
-	def make_tree( self, data, classes, feature_names, max_level = -1, level = 0 ):
-		""" Construct the tree.
-
-		data          --
-		classes       --
-		feature_names --
-		max_level     --
-		level         --
-		"""
-
-		data_amount = len( data )
-		feature_amount = len( data[0] )
-
-		try: self.feature_names
-		except: self.feature_names = feature_names
-
-		# Get existing classes
-		new_classes = []
-		for some_class in classes:
-			if new_classes.count( some_class ) == 0:
-				new_classes.append( some_class )
-
-		# Compute the default class
-		frequency = ny.zeros( len( new_classes ) )
-		entropy_total, gini_total, index = 0, 0, 0
-
-		for some_class in new_classes:
-			frequency[index] = classes.count( some_class )
-			entropy_total += self.calc_entropy( float( frequency[index] ) / data_amount )
-			gini_total += ( float( frequency[index] ) / data_amount ) ** 2
-			index += 1
-
-		gini_total = 1 - gini_total
-		default_class = classes[ny.argmax( frequency )]
-
-		# Empty branch
-		if data_amount == 0 or feature_amount == 0 or ( max_level >= 0 and level > max_level ):
+		if not data or len( attributes ) - 1 <= 0:
 			return default
-		# There is only one class left
-		elif classes.count( classes[0] ) == data_amount:
-			return classes[0]
-		# We have to go deeper
+		elif values.count( values[0] ) == len( values ):
+			return values[0]
 		else:
-			# Choose best feature
-			gain = ny.zeros( feature_amount )
-			ggain = ny.zeros( feature_amount )
+			best = self._choose_attribute( data, attributes, target_attr )
+			tree = { best: {} }
 
-			for feature in range( feature_amount ):
-				g, gg = self.calc_info_gain( data, classes, feature )
-				gain[feature] = entropy_total - g
-				ggain[feature] = gini_total - gg
-
-			best_feature = ny.argmax( gain )
-			tree = { feature_names[best_feature]:{} }
-
-			# Possible values of <best_feature>
-			values = []
-			for datapoint in data:
-				if values.count( datapoint[best_feature] ) == 0:
-					values.append( datapoint[best_feature] )
-
-			# Find datapoints to each value of the feature
-			for value in values:
-				new_data, new_classes, index = [], [], 0
-				for datapoint[best_feature] == value:
-					if best_feature == 0:
-						new_datapoint = datapoint[1:]
-						names_new = feature_names[1:]
-					elif best_feature == feature_amount:
-						new_datapoint = datapoint[:-1]
-						names_new = feature_names[:-1]
-					else:
-						new_datapoint = datapoint[:best_feature]
-						new_datapoint.extend( datapoint[best_feature + 1:] )
-						names_new = feature_names[:best_feature]
-						names_new.extend( feature_names[best_feature + 1:] )
-					new_data.append( new_datapoint )
-					new_classes.append( classes[index] )
-				index += 1
-
-			# Build the next part of the tree
-			subtree = self.make_tree( new_data, new_classes, new_names, max_level, level + 1 )
-
-			tree[feature_names[best_feature]][value] = subtree
+			for value in self._get_values( data, best ):
+				subtree = self._make_tree(
+					self._get_examples( data, best, value ),
+					[attr for attr in attributes if attr != best],
+					target_attr
+				)
+				tree[best][value] = subtree
 
 		return tree
 
 
-	def calc_entropy( self, p ):
-		""" 
-
-		p --
+	def _majority_value( self, data, target_attr ):
+		"""
+		Creates a list of all values in the target attribute for each record
+		in the data, and return the value that appears the most frequently.
 		"""
 
-		return -p * ny.log2( p ) if p != 0 else 0
+		lst = [record[target_attr] for record in data]
+		highest_freq = 0
+		most_freq = None
+		unique_lst = list( set( lst ) )
+
+		for val in unique_lst:
+			if lst.count( val ) > highest_freq:
+				most_freq = val
+				highest_freq = lst.count( val )
+
+		return most_freq
 
 
-	def calc_info_gain( self, data, classes, feature ):
-		""" 
-
-		data    --
-		classes --
-		feature --
+	def _choose_attribute( self, data, attributes, target_attr ):
+		"""
+		Cycles through all the attributes and returns the attribute
+		with the highest information gain (or lowest entropy).
 		"""
 
-		gain, ggain, data_amount = 0, 0, len( data )
+		data = data[:]
+		best_gain = 0.0
+		best_attr = None
 
-		# Possible values the feature can take
-		values = [], possible_values = 0
-		for datapoint in data:
-			if values.count( datapoint[feature] ) == 0:
-				values.append( datapoint[feature] )
-				possible_values += 1
+		for attr in attributes:
+			gain = self._gain( data, attr, target_attr )
+			if gain >= best_gain and attr != target_attr:
+				best_gain = gain
+				best_attr = attr
 
-		feature_counts = ny.zeros( possible_values )
-		entropy = ny.zeros( possible_values )
-		gini = ny.zeros( possible_values )
-		value_index = 0
+		return best_attr
 
-		for value in values:
-			data_index, new_classes = 0, []
-			for datapoint in data:
-				if datapoint[feature] == value:
-					feature_counts[value_index] += 1
-					new_classes.append( classes[data_index] )
-				data_index += 1
 
-			class_values = []
-			for some_class in new_classes:
-				if class_values.count( some_class ) == 0:
-					class_values.append( some_class )
+	def _get_values( self, data, attr ):
+		"""
+		Creates a list of values in the given attribute for
+		each recod in the data.
+		"""
 
-			class_counts = ny.zeros( len( class_values ) )
-			class_index = 0
-			for class_value in class_values:
-				for some_class in new_classes:
-					if some_class == class_value:
-						class_counts[class_index] += 1
-					class_index += 1
+		data = data[:]
+		lst = [record[attr] for record in data]
+		return list( set( lst ) )
 
-			for class_index in range( len( class_values ) ):
-				entropy[value_index] += self.calc_entropy( float( class_counts[class_index] ) / ny.sum( class_counts ) )
-				gini[value_index] += ( float( class_counts[class_index] ) / ny.sum( class_counts ) ) ** 2
 
-			gain += float( feature_counts[value_index] ) / data_amount * entropy[value_index]
-			ggain += float( feature_counts[value_index] ) / data_amount * gini[value_index]
-			value_index += 1
+	def _get_examples( self, data, attr, value ):
+		"""
+		Returns a list of all the records in <data> with
+		the value of <attr> matching the given value.
+		"""
 
-		return gain, 1 - ggain
+		data = data[:]
+		lst = []
+
+		if not data:
+			return lst
+		else:
+			record = data.pop()
+			if record[attr] == value:
+				lst.append( record )
+				lst.extend( self._get_examples( data, attr, value ) )
+				return lst
+			else:
+				lst.extend( self._get_examples( data, attr, value ) )
+				return lst
+
+
+	# def classify( self, data, tree = None ):
+	# 	"""
+	# 	Returns a list of classifications for each of the records in the data.
+	# 	"""
+
+	#	if tree is None:
+	#		tree = self.tree
+
+	# 	data = data[:]
+	# 	classification = []
+
+	# 	for record in data:
+	# 		classification.append( self.use( record, tree ) )
+
+	# 	return classification
+
+
+	def _entropy( self, data, target_attr ):
+		"""
+		Calculate the entropy of the given data for the target attribute.
+		"""
+
+		val_freq = {}
+		data_entropy = 0.0
+
+		for record in data:
+			key = record[target_attr]
+			if val_freq.has_key( key ):
+				val_freq[key] += 1.0
+			else:
+				val_freq[key] = 1.0
+
+		for freq in val_freq.values():
+			data_entropy += -freq / len( data ) * ny.log2( freq / len( data ) )
+
+		return data_entropy
+
+
+	def _gain( self, data, attr, target_attr ):
+		"""
+		Calculate the information gain (reduction in entropy) that would
+		result by splitting the data on the given attribute.
+		"""
+
+		val_freq = {}
+		subset_entropy = 0.0
+
+		for record in data:
+			key = record[attr]
+			if val_freq.has_key( key ):
+				val_freq[key] += 1.0
+			else:
+				val_freq[key] = 1.0
+
+		for val in val_freq.keys():
+			val_prob = val_freq[val] / ny.sum( val_freq.values() )
+			data_subset = [record for record in data if record[attr] == val]
+			subset_entropy += val_prob * self._entropy( data_subset, target_attr )
+
+		return self._entropy( data, target_attr ) - subset_entropy
+
+
+	def use( self, record, tree = None ):
+		"""
+		Return a classification for the given record.
+		"""
+
+		if tree is None:
+			tree = self.tree
+
+		if type( tree ) == type( "string" ):
+			return tree
+		else:
+			attr = tree.keys()[0]
+			t = tree[attr][record[attr]]
+			return self.use( record, t )
 
 
 
 if __name__ == "__main__":
 	# Test the neuronal networks with a simple problem: XOR.
-	inputs  = [[0,0], [0,1], [1,0], [1,1]]
-	targets = [[0], [1], [1], [0]]
+	attributes = ["a", "b", "r"]
+	inputs = [[0,0,"no"], [0,1,"yes"], [1,0,"yes"], [1,1,"no"]]
+
+	data = []
+	for value in inputs:
+		zipped = zip( attributes, [datum for datum in value] )
+		data.append( dict( zipped ) )
 
 	print "Testing DTree with XOR:"
+	my_dtree = DTree( data, attributes, attributes[len( attributes ) - 1] )
+	my_dtree.train()
 
-	my_dtree = DTree()
-
-	out = []
-	out_targets = [[0], [0], [1], [1], [1], [0]]
+	out = [
+		my_dtree.use( {"a":0,"b":0} ), my_dtree.use( {"a":0,"b":1} ),
+		my_dtree.use( {"a":1,"b":0} ), my_dtree.use( {"a":1,"b":1} ),
+		my_dtree.use( {"a":1,"b":1} ), my_dtree.use( {"a":0,"b":1} )
+	]
+	targets = ["no", "yes", "yes", "no", "no", "yes"]
 
 	correct = 0
-	for i in range( len( out ) ):
-		if out[i][0] == out_targets[i][0]: correct += 1
-		else: print "  False: %d == %d" % ( out[i][0], out_targets[i][0] )
+	for i in range( len( targets ) ):
+		if out[i] == targets[i]: correct += 1
+		else: print "  False: %s == %s" % ( out[i], targets[i] )
+	print "Correct: %d/%d" % ( correct, len( targets ) )
 
-	print "Correct: %d/%d" % ( correct, len( out ) )
-
-	# export_file = "export_dtree_xor.txt"
-	# my_dtree.export( export_file )
+	# export_file = "export_mlp_xor.txt"
+	# my_mlp.export( export_file )
 	# print "Weight layers exported to %s." % export_file
-	# my_dtree.import_weights( export_file )
+	# my_mlp.import_weights( export_file )
 	# print "Weight layers imported from %s." % export_file
