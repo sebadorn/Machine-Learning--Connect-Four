@@ -227,7 +227,7 @@ class Game:
 			for y in range( FIELD_HEIGHT ):
 				# We only care about players, not blank fields
 				if self.board[x][y] == STONE_BLANK:
-					count = 0; continue
+					continue
 
 				# Check: UP
 				blank, ai, human = self._count_stones_up( x, y )
