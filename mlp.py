@@ -38,6 +38,7 @@ class MLP:
 		self.nodes_hidden = hidden_nodes
 		self.beta = beta
 		self.momentum = momentum
+		self.outtype = MLP_OUTTYPE
 
 		self._init_weights()
 
@@ -81,16 +82,16 @@ class MLP:
 			if count >= MLP_ES_MAX_ITER:
 				print "[early_stopping] Reached limit of %d iterations." % MLP_ES_MAX_ITER
 				break
-			count += 1
-			if count % 10 == 0:
-				print "[early_stopping] count: %d   error: %f" % ( count, new_val_err )
 
 			self.train( eta, iterations, outtype )
 			old_val_err2 = old_val_err1
 			old_val_err1 = new_val_err
 			validout = self._forward( valid )
 			new_val_err = 0.5 * ny.sum( ( validtargets - validout ) ** 2 )
-		print "[early_stopping] end count: " + str( count ) + " and error: " + str( new_val_err )
+
+			count += 1
+			print "[early_stopping] count: %d   error: %f" % ( count, new_val_err )
+		print "[early_stopping] end count: %d and error: %f" % ( count, new_val_err )
 
 
 	def train( self, eta = 0.25, iterations = 1000, outtype = "logistic" ):
@@ -143,7 +144,7 @@ class MLP:
 		if self.outtype == "linear":
 			pass
 		elif self.outtype == "logistic":
-			outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+			outputs = 1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
 		elif self.outtype == 'softmax':
 			normalizers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
 			outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalizers )
@@ -218,8 +219,18 @@ class MLP:
 		hidden = ny.concatenate( ( hidden, ones ), axis = 1 )
 
 		# Acitvation in output layer
+		# outputs = ny.dot( hidden, self.weights_layer2 )
+		# outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+
 		outputs = ny.dot( hidden, self.weights_layer2 )
-		outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+
+		if self.outtype == "linear":
+			pass
+		elif self.outtype == "logistic":
+			outputs = 1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+		elif self.outtype == 'softmax':
+			normalizers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
+			outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalizers )
 
 		return outputs
 
@@ -229,19 +240,25 @@ class MLP:
 		Export the weight layers of the MLP.
 		"""
 
-		layer_1 = str( self.weights_layer1 )
+		layer_1, layer_2 = "", ""
+
+		for line in self.weights_layer1:
+			for ele in line:
+				layer_1 += str( ele ) + " "
 		layer_1 = layer_1.replace( '[', '' )
 		layer_1 = layer_1.replace( ']', '' )
 		layer_1 = layer_1.replace( '  ', ' ' )
 
-		layer_2 = str( self.weights_layer2 )
+		for line in self.weights_layer2:
+			for ele in line:
+				layer_2 += str( ele ) + " "
 		layer_2 = layer_2.replace( '[', '' )
 		layer_2 = layer_2.replace( ']', '' )
 		layer_2 = layer_2.replace( '  ', ' ' )
 
 		f = open( filename, 'w' )
 		f.write( "# Config:\n" )
-		f.write( "# Beta: %f  Eta: %f  Hidden nodes: %d\n" % ( MLP_BETA, MLP_ETA, MLP_HIDDEN_NODES )  )
+		f.write( "# Beta: %f  Eta: %f  Hidden nodes: %d\n" % ( MLP_BETA, MLP_ETA, self.nodes_hidden )  )
 		f.write( "# Iterations: %d  Momentum: %f  Outtype: %s\n" % ( MLP_ITER, MLP_MOMENTUM, MLP_OUTTYPE )  )
 		f.write( "\n# Layer 1\n" )
 		f.write( layer_1 )
@@ -306,7 +323,7 @@ class MLP:
 
 		i, j = 0, 0
 		for v in values_layer1:
-			if j >= MLP_HIDDEN_NODES:
+			if j >= self.nodes_hidden:
 				j = 0
 				i += 1
 			self.weights_layer1[i][j] = v
@@ -345,3 +362,16 @@ if __name__ == "__main__":
 	print "Weight layers exported to %s." % export_file
 	my_mlp.import_weights( export_file )
 	print "Weight layers imported from %s." % export_file
+
+	print
+	print "Repeat test:"
+	out = [
+		round( my_mlp.use( [0,0] ) ), round( my_mlp.use( [0,1] ) ),
+		round( my_mlp.use( [1,0] ) ), round( my_mlp.use( [1,1] ) )
+	]
+	target = [0,1,1,0]
+	correct = 0
+	for i in range( 4 ):
+		if out[i] == target[i]: correct += 1
+		else: print "  False: %d == %d" % ( out[i], target[i] )
+	print "Correct: %d/4" % correct
