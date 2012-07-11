@@ -120,7 +120,7 @@ class Game:
 
 		blank, ai, human = -1, 0, 0
 
-		if x + CONNECT <= FIELD_WIDTH and y + CONNECT < FIELD_HEIGHT:
+		if x + CONNECT <= FIELD_WIDTH and y + CONNECT <= FIELD_HEIGHT:
 			for i in range( CONNECT ):
 				col, row = x + i, y + i
 				stone = self.board[col][row]
@@ -337,22 +337,20 @@ class Game:
 						if VERBOSE: print "Col: %d  Out: %f" % ( x, ai_output )
 
 						# Close to (opponents) LOSS
-						if diff_loss <= diff_draw and diff_loss <= diff_win:
+						if diff_loss <= diff_draw:
 							if diff_loss < opp_loss["diff"]:
 								opp_loss["col"] = x
 								opp_loss["diff"] = diff_loss
 
 						# Close to DRAW
-						elif diff_draw <= diff_loss and diff_draw <= diff_win:
+						else: # diff_draw <= diff_loss
 							if diff_draw < opp_draw["diff"]:
 								opp_draw["col"] = x
 								opp_draw["diff"] = diff_draw
 
-						# Close to (opponents) WIN
-						else:
-							if diff_win < opp_win["diff"]:
-								opp_win["col"] = x
-								opp_win["diff"] = diff_win
+						# Don't even check for the (opponents) WIN case.
+						# Rather take the least worse DRAW column.
+
 
 					# RBF
 					elif self.ai_flag == self.FLAG_RBF:

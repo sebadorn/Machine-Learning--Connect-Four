@@ -35,7 +35,7 @@ input[type="button"]:hover {
 
 .settings {
 	background-color: #fafafa;
-	margin-bottom: 100px;
+	margin-bottom: 40px;
 	padding: 40px;
 	text-align: center;
 }
@@ -123,4 +123,15 @@ input[type="button"]:hover {
 
 .ai {
 	background-color: #f00000;
+}
+
+
+#msg {
+	background-color: #f6f6f6;
+	color: #404040;
+	cursor: default;
+	margin: 0 auto 36px;
+	padding: 14px;
+	text-align: center;
+	width: 560px;
 }

@@ -219,9 +219,6 @@ class MLP:
 		hidden = ny.concatenate( ( hidden, ones ), axis = 1 )
 
 		# Acitvation in output layer
-		# outputs = ny.dot( hidden, self.weights_layer2 )
-		# outputs =  1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
-
 		outputs = ny.dot( hidden, self.weights_layer2 )
 
 		if self.outtype == "linear":
@@ -272,20 +269,40 @@ class MLP:
 		Export the weight layers of the MLP as Javascript.
 		"""
 
-		layers = [str( self.weights_layer1 ), str( self.weights_layer2 )]
-		for i in range( len( layers ) ):
-			layers[i] = layers[i].replace( "  ", " " ).replace( "  ", " " )
-			layers[i] = layers[i].replace( " ", ", " )
-			layers[i] = layers[i].replace( "]", "]," )
-			layers[i] = layers[i].replace( "[,", "[" ).replace( "[[", "[" )
-			layers[i] = layers[i].replace( "],],", "]" )
-			layers[i] = layers[i].replace( ", [", "[" )
+		layer_1, layer_2 = "", ""
+
+		count = 0
+		for line in self.weights_layer1:
+			for ele in line:
+				count += 1
+				if count == 1:
+					layer_1 += "["
+				if count == self.nodes_hidden:
+					layer_1 += str( ele ) + "],\n"
+					count = 0
+				else:
+					layer_1 += str( ele ) + ", "
+		layer_1 = layer_1[:-2]
+
+		count = 0
+		for line in self.weights_layer2:
+			for ele in line:
+				count += 1
+				if count == 1:
+					layer_2 += "["
+				if count == self.nodes_out:
+					layer_2 += str( ele ) + "],\n"
+					count = 0
+				else:
+					layer_2 += str( ele ) + ", "
+		layer_2 = layer_2[:-2]
 
 		f = open( filename, 'w' )
+		layers = [layer_1, layer_2]
 		for i in range( len( layers ) ):
-			f.write( "var MLP_weights_" + str( i + 1 ) + " = new Array(" )
+			f.write( "var MLP_weights_" + str( i + 1 ) + " = new Array(\n" )
 			f.write( layers[i] )
-			f.write( ");" )
+			f.write( ");\n" )
 		f.close()
 
 

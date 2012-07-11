@@ -21,6 +21,10 @@ var FIELD_WIDTH = 60, // [px]
  */
 var Game = {
 
+	count_ai_moves: 0,
+	last_move_human: 0,
+	ended: false,
+
 	board: {
 		gui: null,
 		fields: null,
@@ -48,6 +52,8 @@ var Game = {
 		var col, field;
 
 		// Reset game board
+		Game.ended = false;
+		Game.count_ai_moves = 0;
 		b.fields = new Array();
 		b.col_heights = new Array();
 		b.gui = document.getElementById( "board" );
@@ -69,6 +75,8 @@ var Game = {
 
 			b.gui.appendChild( col );
 		}
+
+		Game.set_msg( "Game ready! Human player begins. <em>(That’s you.)</em>" );
 	},
 
 
@@ -101,6 +109,15 @@ var Game = {
 
 
 	/**
+	 * Display a message on the page.
+	 */
+	set_msg: function( msg ) {
+		var msg_area = document.getElementById( "msg" );
+		msg_area.innerHTML = msg;
+	},
+
+
+	/**
 	 * Human player chooses a column.
 	 */
 	choose_column: function( event ) {
@@ -121,11 +138,18 @@ var Game = {
 		// Check for winner
 		winner = Game.check_win();
 		if( winner == STONE_HUMAN ) {
-			// TODO: Not console, show on page.
-			console.log( "Winner: Human!" );
+			Game.set_msg( "Winner: Human!" );
+			return;
 		}
 		else if( winner == STONE_AI ) {
-			console.log( "Winner: AI!" );
+			Game.set_msg( "Winner: AI!" );
+			return;
+		}
+
+		// Draw
+		if( Game.check_board_full() ) {
+			Game.set_msg( "No more free fields. It's a draw!" );
+			return;
 		}
 
 		// Flatten game board in order to pass it to the AI.
@@ -143,17 +167,18 @@ var Game = {
 		// Check for winner
 		winner = Game.check_win();
 		if( winner == STONE_HUMAN ) {
-			// TODO: Not console, show on page.
-			console.log( "Winner: Human!" );
+			Game.set_msg( "Winner: Human!" );
+			return;
 		}
 		else if( winner == STONE_AI ) {
-			console.log( "Winner: AI!" );
+			Game.set_msg( "Winner: AI!" );
+			return;
 		}
 
 		// Draw
 		if( Game.check_board_full() ) {
-			// TODO: Not console, show on page.
-			console.log( "No more free fields. It's a draw!" );
+			Game.set_msg( "No more free fields. It's a draw!" );
+			return;
 		}
 	},
 
@@ -172,9 +197,12 @@ var Game = {
 		gui_stone = document.getElementById( "field_" + col + "-" + row );
 		if( stone == STONE_HUMAN ) {
 			gui_stone.setAttribute( "class", "field human" );
+			Game.last_move_human = col;
 		}
 		else {
 			gui_stone.setAttribute( "class", "field ai" );
+			Game.set_msg( "AI chooses column " + ( col + 1 ) + "." );
+			Game.count_ai_moves++;
 		}
 	},
 
@@ -296,7 +324,7 @@ var Game = {
 		    width = Game.board.fields.length,
 		    height = Game.board.fields[0].length;
 
-		if( x + CONNECT <= width && y + CONNECT < height ) {
+		if( x + CONNECT <= width && y + CONNECT <= height ) {
 			for( i = 0; i < CONNECT; i++ ) {
 				col = x + i;
 				row = y + i;
@@ -500,6 +528,13 @@ var Game = {
 			y = b.col_heights[x];
 			if( y >= rows) { continue; }
 
+			// The MLP AI has a bad habit to mimik the human player if he/she
+			// chooses the column 3, 4 or 5 as first two moves. Which basically
+			// means the AI can only loose. Stop the AI from doing that!
+			if( Game.count_ai_moves == 0 && x == Game.last_move_human ) {
+				continue;
+			}
+
 			// Don't change the real game board
 			board_copy = Game.deepcopy( b.fields );
 			board_copy[x][y] = STONE_AI;
@@ -519,7 +554,7 @@ var Game = {
 			if( diff_draw < 0.0 ) { diff_draw *= -1; }
 
 			// Close to (opponents) LOSS
-			if( diff_loss <= diff_draw && diff_loss <= diff_win ) {
+			if( diff_loss <= diff_draw) {
 				if( diff_loss < opp_loss["diff"] ) {
 					opp_loss["col"] = x;
 					opp_loss["diff"] = diff_loss;
@@ -527,21 +562,19 @@ var Game = {
 			}
 
 			// Close to DRAW
-			else if( diff_draw <= diff_loss && diff_draw <= diff_win ) {
+			else { // diff_draw <= diff_loss
 				if( diff_draw < opp_draw["diff"] ) {
 					opp_draw["col"] = x;
 					opp_draw["diff"] = diff_draw;
 				}
 			}
 
-			// Close to (opponents) WIN
-			else {
-				if( diff_win < opp_win["diff"] ) {
-					opp_win["col"] = x;
-					opp_win["diff"] = diff_win;
-				}
-			}
+			// Don't even check for the (opponents) WIN case.
+			// Rather take the least worse DRAW column.
+
+			console.log( [x, ai_output] );
 		}
+		console.log( "" );
 
 		// We want the opponent to loose
 		if( opp_loss["col"] >= 0 ) {
@@ -556,9 +589,11 @@ var Game = {
 			use_pos = opp_win["col"];
 		}
 		else {
-			console.log( "-- The AI has no idea what to do and stares mindlessly at a cloud outside the window." );
-			console.log( "-- The cloud looks like a rabbit riding a pony." );
-			console.log( "-- You win by forfeit." );
+			Game.set_msg(
+				"-- The AI has no idea what to do and stares mindlessly at a cloud outside the window.<br />" +
+				"-- The cloud looks like a rabbit riding a pony.<br />" +
+				"-- You win by forfeit."
+			);
 		}
 
 		return use_pos;
@@ -571,7 +606,7 @@ var Game = {
 	 * @return {Array} outputs
 	 */
 	use_mlp: function( inputs ) {
-		var exp, i, j, k, hidden,
+		var exp, i, j, k, hidden, weight,
 		    neuron_connections_layer1 = Game.MLP.weights_1[0].length,
 		    neuron_connections_layer2 = Game.MLP.weights_2[0].length;
 
@@ -583,7 +618,13 @@ var Game = {
 		for( j = 0; j < neuron_connections_layer1; j++ ) {
 			hidden[j] = 0.0;
 			for( i = 0; i < inputs.length; i++ ) {
-				hidden[j] += inputs[i] * Game.MLP.weights_1[i][j];
+				if( i < Game.MLP.weights_1.length ) {
+					weight = Game.MLP.weights_1[i][j];
+				}
+				else {
+					weight = 0.5;
+				}
+				hidden[j] += inputs[i] * weight;
 			}
 		}
 		for( i = 0; i < hidden.length; i++ ) {
@@ -594,17 +635,19 @@ var Game = {
 		// Add bias node
 		hidden[hidden.length] = -1.0;
 
-		// Activation in output layer
+		// Activation in output layer (linear)
 		outputs = new Array();
 		for( k = 0; k < neuron_connections_layer2; k++ ) {
 			outputs[k] = 0.0;
 			for( j = 0; j < hidden.length; j++ ) {
-				outputs[k] += hidden[j] * Game.MLP.weights_2[j][k];
+				if( j < Game.MLP.weights_2.length ) {
+					weight = Game.MLP.weights_2[j][k];
+				}
+				else {
+					weight = 0.5;
+				}
+				outputs[k] += hidden[j] * weight;
 			}
-		}
-		for( i = 0; i < outputs.length; i++ ) {
-			exp = Math.exp( -1.0 * Game.MLP.beta * outputs[i] );
-			outputs[i] = 1.0 / ( 1.0 + exp );
 		}
 
 		return outputs;
