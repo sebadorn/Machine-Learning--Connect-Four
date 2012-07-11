@@ -1,3 +1,4 @@
 *.pyc
 connect-4.data
 connect-4.names
+*_xor.txt
