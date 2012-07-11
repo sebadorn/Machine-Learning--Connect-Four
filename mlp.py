@@ -255,8 +255,8 @@ class MLP:
 
 		f = open( filename, 'w' )
 		f.write( "# Config:\n" )
-		f.write( "# Beta: %f  Eta: %f  Hidden nodes: %d\n" % ( MLP_BETA, MLP_ETA, self.nodes_hidden )  )
-		f.write( "# Iterations: %d  Momentum: %f  Outtype: %s\n" % ( MLP_ITER, MLP_MOMENTUM, MLP_OUTTYPE )  )
+		f.write( "# Beta: %f  Eta: %f  Hidden nodes: %d\n" % ( MLP_BETA, MLP_ETA, self.nodes_hidden ) )
+		f.write( "# Iterations: %d  Momentum: %f  Outtype: %s\n" % ( MLP_ITER, MLP_MOMENTUM, MLP_OUTTYPE ) )
 		f.write( "\n# Layer 1\n" )
 		f.write( layer_1 )
 		f.write( "\n\n# Layer 2\n" )
@@ -306,7 +306,7 @@ class MLP:
 		f.close()
 
 
-	def import_weights( self, filename = MLP_EXPORT_FILE ):
+	def import_ai( self, filename = MLP_EXPORT_FILE ):
 		"""
 		Imports weight layers from a file.
 		"""
@@ -377,7 +377,7 @@ if __name__ == "__main__":
 	export_file = "export_mlp_xor.txt"
 	my_mlp.export( export_file )
 	print "Weight layers exported to %s." % export_file
-	my_mlp.import_weights( export_file )
+	my_mlp.import_ai( export_file )
 	print "Weight layers imported from %s." % export_file
 
 	print

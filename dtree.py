@@ -3,6 +3,7 @@
 
 from global_vars import *
 import numpy as ny
+import ast
 
 
 class DTree:
@@ -183,8 +184,44 @@ class DTree:
 			return tree
 		else:
 			attr = tree.keys()[0]
+			if attr not in tree or attr not in record:
+				return "unknown"
+			if record[attr] not in tree[attr]:
+				return "unknown"
 			t = tree[attr][record[attr]]
 			return self.use( record, t )
+
+
+	def export( self, filename = DT_EXPORT_FILE ):
+		"""
+		Export a created decision tree.
+		"""
+
+		f = open( filename, "w" )
+		f.write( str( self.tree ) )
+		f.close()
+
+
+	def export_js( self, filename = DT_EXPORT_FILE_JS ):
+		"""
+		Export a created decision tree as Javascript file.
+		"""
+
+		f = open( filename, "w" )
+		f.write( "var DTree_tree = " + str( self.tree ) + ";" )
+		f.close()
+
+
+	def import_ai( self, filename = DT_EXPORT_FILE ):
+		"""
+		Import a previously created decision tree.
+		"""
+
+		f = open( filename, "r" )
+		self.tree = ast.literal_eval( f.read() )
+		f.close()
+
+
 
 
 
@@ -215,8 +252,24 @@ if __name__ == "__main__":
 		else: print "  False: %s == %s" % ( out[i], targets[i] )
 	print "Correct: %d/%d" % ( correct, len( targets ) )
 
-	# export_file = "export_dtree_xor.txt"
-	# my_dtree.export( export_file )
-	# print "Tree exported to %s." % export_file
-	# my_dtree.import_weights( export_file )
-	# print "Tree imported from %s." % export_file
+	export_file = "export_dtree_xor.txt"
+	my_dtree.export( export_file )
+	print "Tree exported to %s." % export_file
+	my_dtree.import_ai( export_file )
+	print "Tree imported from %s." % export_file
+
+	print
+	print "Testing imported DTree with XOR again:"
+
+	out = [
+		my_dtree.use( {"a":1,"b":1} ), my_dtree.use( {"a":0,"b":1} ),
+		my_dtree.use( {"a":1,"b":0} ), my_dtree.use( {"a":1,"b":1} ),
+		my_dtree.use( {"a":1,"b":1} ), my_dtree.use( {"a":0,"b":0} )
+	]
+	targets = ["no", "yes", "yes", "no", "no", "no"]
+
+	correct = 0
+	for i in range( len( targets ) ):
+		if out[i] == targets[i]: correct += 1
+		else: print "  False: %s == %s" % ( out[i], targets[i] )
+	print "Correct: %d/%d" % ( correct, len( targets ) )

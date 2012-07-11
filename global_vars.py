@@ -3,7 +3,12 @@
 
 VERBOSE = True
 
-DATA_LIMIT = 67557 # Limit data to use for training (67557 in total)
+# File name with training data
+FILE_DATA = "connect-4.data"
+# Number of attributes in each line
+DATA_NUM_ATTR = 43
+
+DATA_LIMIT = 10 # Limit data to use for training (67557 in total)
 DATA_NORMALIZE = False
 
 # Game board
@@ -37,9 +42,9 @@ MLP_OUTTYPE = "linear"
 RBF_ETA = 0.4
 RBF_EXPORT_FILE = "export_rbf.txt"
 RBF_EXPORT_FILE_JS = "web/export_rbf.js"
-RBF_ITER = 100
+RBF_ITER = 40
 RBF_KMEANS = True
-RBF_NODES = 200
+RBF_NODES = 30
 RBF_NORMALIZE = True
 RBF_SIGMA = 0
 
@@ -47,3 +52,9 @@ RBF_SIGMA = 0
 DT_EXPORT_FILE = "export_dtree.txt"
 DT_EXPORT_FILE_JS = "web/export_dtree.js"
 DT_TARGET_ATTRIBUTE = "outcome"
+DATA_ATTRIBUTES = [
+	"a1","a2","a3","a4","a5","a6","b1","b2","b3","b4","b5","b6",
+	"c1","c2","c3","c4","c5","c6","d1","d2","d3","d4","d5","d6",
+	"e1","e2","e3","e4","e5","e6","f1","f2","f3","f4","f5","f6",
+	"g1","g2","g3","g4","g5","g6", DT_TARGET_ATTRIBUTE
+]

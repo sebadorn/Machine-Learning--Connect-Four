@@ -11,18 +11,6 @@ import mlp, rbf, dtree, game
 # The win/loss/draw indicates the outcome for the next
 # player, if both follow a perfect plan.
 
-# File name with training data
-FILE_DATA = "connect-4.data"
-# Number of attributes in each line
-DATA_NUM_ATTR = 43
-# Name of the attributes. Needed for the DTree.
-DATA_ATTRIBUTES = [
-	"a1","a2","a3","a4","a5","a6","b1","b2","b3","b4","b5","b6",
-	"c1","c2","c3","c4","c5","c6","d1","d2","d3","d4","d5","d6",
-	"e1","e2","e3","e4","e5","e6","f1","f2","f3","f4","f5","f6",
-	"g1","g2","g3","g4","g5","g6", DT_TARGET_ATTRIBUTE
-]
-
 
 def my_converter( x ):
 	""" Converter for Numpys loadtxt function.
@@ -136,6 +124,8 @@ def select_ai( cl, data, targets, original_import ):
 			sigma = RBF_SIGMA, rbfs_amount = RBF_NODES, use_kmeans = RBF_KMEANS, normalize = RBF_NORMALIZE
 		)
 
+		print "RBF created."
+
 	# DTree
 	elif cl == "DTree":
 		data = []
@@ -143,6 +133,8 @@ def select_ai( cl, data, targets, original_import ):
 			zipped = zip( DATA_ATTRIBUTES, [datum for datum in value] )
 			data.append( dict( zipped ) )
 		ai = dtree.DTree( data, DATA_ATTRIBUTES, DT_TARGET_ATTRIBUTE )
+
+		print "DTree created."
 
 	return ai
 
@@ -234,7 +226,7 @@ if __name__ == "__main__":
 
 		# Import weights into the AI
 		elif cl == "import":
-			ai.import_weights()
+			ai.import_ai()
 			print "Import completed."
 
 		elif cl != "":

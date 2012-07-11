@@ -363,6 +363,22 @@ class Game:
 						elif win == 1: opp_win["col"] = x
 
 
+					# DTree
+					elif self.ai_flag == self.FLAG_DTREE:
+						for i in range( len( ai_board_format ) ):
+							if ai_board_format[i] == STONE_BLANK:
+								ai_board_format[i] = "b"
+							elif ai_board_format[i] == STONE_HUMAN:
+								ai_board_format[i] = "x"
+							elif ai_board_format[i] == STONE_AI:
+								ai_board_format[i] = "o"
+						ai_board_format = dict( zip( DATA_ATTRIBUTES[:-1], ai_board_format ) )
+
+						ai_output = self.ai.use( ai_board_format )
+
+						if VERBOSE: print "Col: %d  Outcome: %s" % ( x, ai_output )
+
+
 				# Select best possible result
 				if VERBOSE: print opp_loss, opp_draw, opp_win
 
