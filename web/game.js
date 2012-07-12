@@ -822,16 +822,29 @@ var Game = {
 					sum += hidden[i][j] * pcn_weights[j][k];
 				}
 
-				// Treshold function
-				outputs[i][k] = ( sum > 0 ) ? 1 : 0;
+				outputs[i][k] = sum;
 			}
 
 		}
 
+		// They arrays have the same values, so reduce it to one.
+		outputs = outputs[0];
+
+		// Normalize
+		maximum = outputs[0];
+		for( j = 1; j < outputs.length; j++ ) {
+			maximum = ( outputs[j] > maximum ) ? outputs[j] : maximum;
+		}
+		for( j = 0; j < outputs.length; j++ ) {
+			outputs[j] /= maximum;
+			// Treshold function
+			outputs[j] = ( outputs[j] < 0.5 ) ? 0 : 1;
+		}
+
 		return {
-			"loss": outputs[0][0],
-			"draw": outputs[0][1],
-			"win": outputs[0][2]
+			"loss": outputs[0],
+			"draw": outputs[1],
+			"win": outputs[2]
 		};
 	},
 
