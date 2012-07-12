@@ -252,7 +252,7 @@ if __name__ == "__main__":
 		else: print "  False: %s == %s" % ( out[i], targets[i] )
 	print "Correct: %d/%d" % ( correct, len( targets ) )
 
-	export_file = "export_dtree_xor.txt"
+	export_file = "exports/export_dtree_xor.txt"
 	my_dtree.export( export_file )
 	print "Tree exported to %s." % export_file
 	my_dtree.import_ai( export_file )

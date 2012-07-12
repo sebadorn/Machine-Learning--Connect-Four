@@ -374,7 +374,7 @@ if __name__ == "__main__":
 		else: print "  False: %d == %d" % ( out[i], target[i] )
 	print "Correct: %d/4" % correct
 
-	export_file = "export_mlp_xor.txt"
+	export_file = "exports/export_mlp_xor.txt"
 	my_mlp.export( export_file )
 	print "Weight layers exported to %s." % export_file
 	my_mlp.import_ai( export_file )

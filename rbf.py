@@ -146,6 +146,7 @@ class RBF:
 
 		f = open( filename, 'w' )
 		f.write( "# Config:\n" )
+		f.write( "# Trained with: %d" % DATA_LIMIT )
 		f.write( "# Eta: %f  Nodes: %d  Sigma: %f\n" % ( RBF_ETA, self.rbfs_amount, self.sigma ) )
 		f.write(
 			"# Iterations: %d  K-means: %d  Normalize: %d\n"
@@ -276,7 +277,7 @@ if __name__ == "__main__":
 
 	print "Correct: %d/%d" % ( correct, len( out ) )
 
-	export_file = "export_rbf_xor.txt"
+	export_file = "exports/export_rbf_xor.txt"
 	my_rbf.export( export_file )
 	print "Weight layers exported to %s." % export_file
 	my_rbf.import_ai( export_file )
@@ -298,4 +299,3 @@ if __name__ == "__main__":
 		else: print "  False: %d == %d" % ( out[i][0], out_targets[i][0] )
 
 	print "Correct: %d/%d" % ( correct, len( out ) )
-	my_rbf.export_js()

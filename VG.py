@@ -57,7 +57,9 @@ def import_traindata( file_in ):
 	cf_original = []
 	f = open( file_in, "r" )
 	for line in f:
-		cf_original.append( line.split( ',' ) )
+		row = line.split( ',' )
+		row[len( row ) - 1] = row[len( row ) - 1].replace( '\n', '' )
+		cf_original.append( row )
 
 	# Split in data and targets
 	data = connectfour[:,:DATA_NUM_ATTR - 1]
