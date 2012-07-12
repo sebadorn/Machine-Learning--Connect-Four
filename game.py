@@ -28,6 +28,9 @@ class Game:
 		elif isinstance( ai, dtree.DTree ):
 			self.ai_flag = self.FLAG_DTREE
 
+		self.count_ai_moves = 0
+		self.last_move_human = 0
+
 		self._init_field()
 
 
@@ -280,6 +283,7 @@ class Game:
 			y = self.current_height[x]
 			self.current_height[x] += 1
 			self.board[x][y] = STONE_HUMAN
+			self.last_move_human = x
 
 			self.print_board( self.board )
 
@@ -305,10 +309,21 @@ class Game:
 				use_pos = forced_move
 			# Let the AI decide
 			else:
-				for x in range( FIELD_WIDTH ):
+				# Shuffle order columns are presented to the AI.
+				# If more than one column could be chosen as next move, it won't
+				# be the same for every game with a little randomness like this.
+				columns = range( FIELD_WIDTH )
+				ny.random.shuffle( columns )
+				for x in columns:
 					# Cell (y) in this column (x) we are currently testing
 					y = self.current_height[x]
 					if y >= FIELD_HEIGHT:
+						continue
+
+					# The MLP AI has a bad habit to mimik the human player if he/she
+					# chooses the column 3, 4 or 5 as first two moves. Which basically
+					# means the AI can only loose. Stop the AI from doing that!
+					if self.count_ai_moves == 0 and x == self.last_move_human:
 						continue
 
 					# Don't change the real game board
@@ -376,6 +391,16 @@ class Game:
 
 						ai_output = self.ai.use( ai_board_format )
 
+						if ai_output == "loss":
+							opp_loss["col"] = x
+						elif ai_output == "draw":
+							opp_draw["col"] = x
+						# Prefer an unknown outcome over yourself losing.
+						elif ai_output == "unknown" and opp_draw["col"] == -1:
+							opp_draw["col"] = x
+						elif ai_output == "win":
+							opp_win["col"] = x
+
 						if VERBOSE: print "Col: %d  Outcome: %s" % ( x, ai_output )
 
 
@@ -405,6 +430,7 @@ class Game:
 			y = self.current_height[use_pos]
 			self.board[use_pos][y] = STONE_AI
 			self.current_height[use_pos] += 1
+			self.count_ai_moves += 1
 
 			self.print_board( self.board )
 
