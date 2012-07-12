@@ -417,7 +417,7 @@ class Game:
 
 			# RBF
 			elif self.ai_flag == self.FLAG_RBF:
-				win, draw, loss = self.ai.use( ai_board_format )[0]
+				win, draw, loss = self.ai.use( ai_board_format )
 
 				if VERBOSE: print "Col: %d  Out: %d/%d/%d" % ( x, win, draw, loss )
 

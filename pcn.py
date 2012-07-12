@@ -70,4 +70,8 @@ class Perceptron:
 		Returns the classification by the perceptron. Which either 1 or 0.
 		"""
 
-		return self._forward( inputs )
+		outputs = ny.dot( inputs, self.weights )[0]
+		outputs /= max( outputs )
+		outputs = ny.where( outputs < 0.5, 0, 1 )
+
+		return outputs
