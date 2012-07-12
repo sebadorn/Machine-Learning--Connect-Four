@@ -6,14 +6,22 @@ var STONE_BLANK = 0.0,
     WIN = 0.0,
     DRAW = 0.5,
     LOSS = 1.0,
-    ANN_MLP = "mlp",
-    ANN_RBF = "rbf";
+    AI_MLP = "mlp",
+    AI_RBF = "rbf",
+    AI_DTree = "dtree";
 
 var FIELD_WIDTH = 60, // [px]
     FIELD_HEIGHT = 60, // [px]
     DEFAULT_COLS = 7,
     DEFAULT_ROWS = 6,
-    CONNECT = 4;
+    DEFAULT_AI = AI_MLP,
+    CONNECT = 4,
+    DATA_ATTRIBUTES = new Array(
+		"a1","a2","a3","a4","a5","a6","b1","b2","b3","b4","b5","b6",
+		"c1","c2","c3","c4","c5","c6","d1","d2","d3","d4","d5","d6",
+		"e1","e2","e3","e4","e5","e6","f1","f2","f3","f4","f5","f6",
+		"g1","g2","g3","g4","g5","g6"
+	);
 
 
 /**
@@ -21,6 +29,7 @@ var FIELD_WIDTH = 60, // [px]
  */
 var Game = {
 
+	ai_system: null,
 	count_ai_moves: 0,
 	last_move_human: 0,
 	ended: false,
@@ -37,9 +46,18 @@ var Game = {
 		weights_2: null
 	},
 
-	RBF: {},
+	RBF: {
+		weights: null,
+		perceptron: {
+			weights: null
+		},
+		normalize: true,
+		sigma: 1.0
+	},
 
-	DTree: {},
+	DTree: {
+		tree: null
+	},
 
 
 	/**
@@ -47,9 +65,11 @@ var Game = {
 	 * @param {int} width Number of columns.
 	 * @param {int} height Number of rows.
 	 */
-	init_board: function( width, height ) {
+	init_board: function( width, height, ai_system ) {
 		var b = Game.board; // shortcut variable
 		var col, field;
+
+		Game.ai_system = ai_system;
 
 		// Reset game board
 		Game.ended = false;
@@ -130,7 +150,12 @@ var Game = {
 		if( id.indexOf( "field_" ) == 0 ) {
 			id = event.target.parentNode.id;
 		}
-		col = id.replace( "col_", "" );
+		col = parseInt( id.replace( "col_", "" ) );
+
+		if( Game.board.col_heights[col] >= bf[col].length ) {
+			Game.set_msg( "Column " + ( col + 1 ) + " is full. You have to choose another column." );
+			return;
+		}
 
 		// Place stone of human player
 		Game.set_stone( col, STONE_HUMAN );
@@ -507,6 +532,26 @@ var Game = {
 
 
 	/**
+	 * Shuffle an array.
+	 * Source: http://stackoverflow.com/a/962890
+	 */
+	shuffle: function( array ) {
+	    var tmp, current, top = array.length;
+
+	    if( top ) {
+	    	while( --top ) {
+		        current = Math.floor( Math.random() * ( top + 1 ) );
+		        tmp = array[current];
+		        array[current] = array[top];
+		        array[top] = tmp;
+		    }
+		}
+
+	    return array;
+	},
+
+
+	/**
 	 * Ask AI where to place the next stone.
 	 */
 	ask_ai: function() {
@@ -514,7 +559,7 @@ var Game = {
 		    cols = b.fields.length,
 		    rows = b.fields[0].length,
 		    board_copy, ai_board_format, ai_output,
-		    x, y, diff_loss, diff_win, diff_draw,
+		    i, x, y, diff_loss, diff_win, diff_draw,
 		    use_pos;
 
 		// Place AI stone
@@ -523,7 +568,16 @@ var Game = {
 		    opp_draw = { "col": -1, "diff": 100.0 },
 		    opp_loss = { "col": -1, "diff": 100.0 };
 
+		// Shuffle order of columns to present to the AI
+		var columns = new Array();
 		for( x = 0; x < cols; x++ ) {
+			columns[columns.length] = x;
+		}
+		columns = Game.shuffle( columns );
+
+		for( i = 0; i < columns.length; i++ ) {
+			x = columns[i];
+
 			// Cell (y) in this column (x) we are currently testing
 			y = b.col_heights[x];
 			if( y >= rows) { continue; }
@@ -543,34 +597,83 @@ var Game = {
 			ai_board_format = Game.flatten( board_copy );
 
 			// Get the possible outcome
-			ai_output = Game.use_mlp( ai_board_format )[0];
 
-			// Difference between targets and output
-			diff_loss = LOSS - ai_output;
-			diff_win = WIN - ai_output;
-			diff_draw = DRAW - ai_output;
-			if( diff_loss < 0.0 ) { diff_loss *= -1; }
-			if( diff_win < 0.0 ) { diff_win *= -1; }
-			if( diff_draw < 0.0 ) { diff_draw *= -1; }
+			// MLP
+			if( Game.ai_system == AI_MLP ) {
+				ai_output = Game.use_mlp( ai_board_format )[0];
 
-			// Close to (opponents) LOSS
-			if( diff_loss <= diff_draw) {
-				if( diff_loss < opp_loss["diff"] ) {
+				// Difference between targets and output
+				diff_loss = LOSS - ai_output;
+				diff_win = WIN - ai_output;
+				diff_draw = DRAW - ai_output;
+				if( diff_loss < 0.0 ) { diff_loss *= -1; }
+				if( diff_win < 0.0 ) { diff_win *= -1; }
+				if( diff_draw < 0.0 ) { diff_draw *= -1; }
+
+				// Close to (opponents) LOSS
+				if( diff_loss <= diff_draw) {
+					if( diff_loss < opp_loss["diff"] ) {
+						opp_loss["col"] = x;
+						opp_loss["diff"] = diff_loss;
+					}
+				}
+
+				// Close to DRAW
+				else { // diff_draw <= diff_loss
+					if( diff_draw < opp_draw["diff"] ) {
+						opp_draw["col"] = x;
+						opp_draw["diff"] = diff_draw;
+					}
+				}
+
+				// Don't even check for the (opponents) WIN case.
+				// Rather take the least worse DRAW column.
+			}
+
+			// RBF
+			else if( Game.ai_system == AI_RBF ) {
+				ai_output = Game.use_rbf( ai_board_format );
+
+				if( ai_output["loss"] == 1 ) { opp_loss["col"] = x; }
+				else if( ai_output["draw"] == 1 ) { opp_draw["col"] = x; }
+				else if( ai_output["win"] == 1 ) { opp_win["col"] = x; }
+			}
+
+			// DTree
+			else if( Game.ai_system == AI_DTree ) {
+				var dict = {};
+				for( i = 0; i < ai_board_format.length; i++ ) {
+					if( ai_board_format[i] == STONE_BLANK ) {
+						ai_board_format[i] = "b";
+					}
+					else if( ai_board_format[i] == STONE_HUMAN ) {
+						ai_board_format[i] = "x";
+					}
+					else if( ai_board_format[i] == STONE_AI ) {
+						ai_board_format[i] = "o";
+					}
+
+					if( i < DATA_ATTRIBUTES.length ) {
+						dict[DATA_ATTRIBUTES[i]] = ai_board_format[i];
+					}
+				}
+
+				ai_output = Game.use_dtree( dict );
+
+				if( ai_output == "loss" ) {
 					opp_loss["col"] = x;
-					opp_loss["diff"] = diff_loss;
 				}
-			}
-
-			// Close to DRAW
-			else { // diff_draw <= diff_loss
-				if( diff_draw < opp_draw["diff"] ) {
+				else if( ai_output == "draw" ) {
 					opp_draw["col"] = x;
-					opp_draw["diff"] = diff_draw;
+				}
+				// Prefer an unknown outcome over yourself losing.
+				else if( ai_output == "unknown" && opp_draw["col"] == -1 ) {
+					opp_draw["col"] = x;
+				}
+				else if( ai_output == "win" ) {
+					opp_win["col"] = x;
 				}
 			}
-
-			// Don't even check for the (opponents) WIN case.
-			// Rather take the least worse DRAW column.
 
 			console.log( [x, ai_output] );
 		}
@@ -590,9 +693,9 @@ var Game = {
 		}
 		else {
 			Game.set_msg(
-				"-- The AI has no idea what to do and stares mindlessly at a cloud outside the window.<br />" +
-				"-- The cloud looks like a rabbit riding a pony.<br />" +
-				"-- You win by forfeit."
+				"The AI has no idea what to do and stares mindlessly at a cloud outside the window. " +
+				"The cloud looks like a rabbit riding a pony.<br />" +
+				"You win by forfeit."
 			);
 		}
 
@@ -606,7 +709,7 @@ var Game = {
 	 * @return {Array} outputs
 	 */
 	use_mlp: function( inputs ) {
-		var exp, i, j, k, hidden, weight,
+		var exp, i, j, k, weight,
 		    neuron_connections_layer1 = Game.MLP.weights_1[0].length,
 		    neuron_connections_layer2 = Game.MLP.weights_2[0].length;
 
@@ -614,16 +717,13 @@ var Game = {
 		inputs[inputs.length] = -1.0;
 
 		// Activation in hidden layer
-		hidden = new Array();
+		var mlp_weights1 = Game.MLP.weights_1, // shortcut
+		    hidden = new Array();
+
 		for( j = 0; j < neuron_connections_layer1; j++ ) {
 			hidden[j] = 0.0;
 			for( i = 0; i < inputs.length; i++ ) {
-				if( i < Game.MLP.weights_1.length ) {
-					weight = Game.MLP.weights_1[i][j];
-				}
-				else {
-					weight = 0.5;
-				}
+				weight = ( i < mlp_weights1.length ) ? mlp_weights1[i][j] : 0.5;
 				hidden[j] += inputs[i] * weight;
 			}
 		}
@@ -636,16 +736,13 @@ var Game = {
 		hidden[hidden.length] = -1.0;
 
 		// Activation in output layer (linear)
-		outputs = new Array();
+		var mlp_weights2 = Game.MLP.weights_2, // shortcut
+		    outputs = new Array();
+
 		for( k = 0; k < neuron_connections_layer2; k++ ) {
 			outputs[k] = 0.0;
 			for( j = 0; j < hidden.length; j++ ) {
-				if( j < Game.MLP.weights_2.length ) {
-					weight = Game.MLP.weights_2[j][k];
-				}
-				else {
-					weight = 0.5;
-				}
+				weight = ( j < mlp_weights2.length ) ? mlp_weights2[j][k] : 0.5;
 				outputs[k] += hidden[j] * weight;
 			}
 		}
@@ -660,7 +757,82 @@ var Game = {
 	 * @return {Array} outputs
 	 */
 	use_rbf: function( inputs ) {
-		// TODO
+		var i, j, k, sum, tmp,
+		    rbfs_amount = Game.RBF.weights[0].length,
+		    hidden = new Array();
+
+		for( i = 0; i < inputs.length; i++ ) {
+			hidden[i] = new Array();
+		}
+
+		// Activation in hidden nodes
+		var rbf_weights = Game.RBF.weights, // shortcut
+		    sigma_square = Game.RBF.sigma * Game.RBF.sigma * 2;
+
+		for( i = 0; i < rbfs_amount; i++ ) {
+			sum = 0.0;
+
+			for( j = 0; j < inputs.length; j++ ) {
+				weight = ( j < rbf_weights.length ) ? rbf_weights[j][i] : 0.5;
+				tmp = inputs[j] - weight;
+				sum += Math.pow( tmp, 2 );
+			}
+
+			for( k = 0; k < inputs.length; k++ ) {
+				hidden[k][i] = -sum / sigma_square;
+			}
+		}
+
+		// Normalize:
+		// Divide each value by the sum of its containing array.
+		if( Game.RBF.normalize ) {
+			for( i = 0; i < hidden.length; i++ ) {
+				sum = 0.0;
+
+				for( j = 0; j < hidden[i].length; j++ ) {
+					sum += hidden[i][j];
+				}
+
+				for( j = 0; j < hidden[i].length; j++ ) {
+					hidden[i][j] /= sum;
+				}
+			}
+		}
+
+		// Bias node
+		var h_len = hidden[0].length;
+		for( i = 0; i < hidden.length; i++ ) {
+			hidden[i][h_len] = -1;
+		}
+
+		// Run through perceptron and get activations
+		var pcn_weights = Game.RBF.perceptron.weights, // shortcut
+		    outputs = new Array();
+
+		for( i = 0; i < hidden.length; i++ ) {
+			outputs[i] = new Array();
+		}
+
+		for( k = 0; k < pcn_weights[0].length; k++ ) {
+
+			for( i = 0; i < hidden.length; i++ ) {
+				sum = 0.0;
+
+				for( j = 0; j < pcn_weights.length; j++ ) {
+					sum += hidden[i][j] * pcn_weights[j][k];
+				}
+
+				// Treshold function
+				outputs[i][k] = ( sum > 0 ) ? 1 : 0;
+			}
+
+		}
+
+		return {
+			"loss": outputs[0][0],
+			"draw": outputs[0][1],
+			"win": outputs[0][2]
+		};
 	},
 
 
@@ -669,8 +841,30 @@ var Game = {
 	 * @param {Array} inputs
 	 * @return {Array} outputs
 	 */
-	use_dtree: function( inputs ) {
-		// TODO
+	use_dtree: function( record, tree ) {
+		if( tree == null ) {
+			tree = Game.DTree.tree;
+		}
+
+		if( typeof( tree ) == "string" ) {
+			return tree;
+		}
+
+		var attr;
+		for( var key in tree ) {
+			attr = key;
+			break;
+		}
+
+		if( record[attr] == null ) {
+			return "unknown";
+		}
+		if( tree[attr][record[attr]] == null ) {
+			return "unknown";
+		}
+		var t = tree[attr][record[attr]];
+
+		return Game.use_dtree( record, t );
 	}
 
 };

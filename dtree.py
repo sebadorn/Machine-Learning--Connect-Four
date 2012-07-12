@@ -182,14 +182,15 @@ class DTree:
 
 		if type( tree ) == type( "string" ):
 			return tree
-		else:
-			attr = tree.keys()[0]
-			if attr not in tree or attr not in record:
-				return "unknown"
-			if record[attr] not in tree[attr]:
-				return "unknown"
-			t = tree[attr][record[attr]]
-			return self.use( record, t )
+
+		attr = tree.keys()[0]
+		if attr not in record:
+			return "unknown"
+		if record[attr] not in tree[attr]:
+			return "unknown"
+		t = tree[attr][record[attr]]
+
+		return self.use( record, t )
 
 
 	def export( self, filename = DT_EXPORT_FILE ):

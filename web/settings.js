@@ -14,7 +14,7 @@ function settings_apply() {
 		inputHeight.value = DEFAULT_ROWS;
 	}
 
-	Game.init_board( width, height );
+	Game.init_board( width, height, selectAI.value );
 }
 
 
@@ -24,11 +24,16 @@ window.addEventListener( "DOMContentLoaded", function() {
 
 	inputWidth = document.getElementById( "board_width" ),
 	inputHeight = document.getElementById( "board_height" );
-	selectANN = document.getElementById( "ann" );
+	selectAI = document.getElementById( "ai_system" );
 	buttonApply.addEventListener( "click", settings_apply, false );
 
 	Game.MLP.weights_1 = MLP_weights_1;
 	Game.MLP.weights_2 = MLP_weights_2;
-	Game.init_board( DEFAULT_COLS, DEFAULT_ROWS );
+	Game.RBF.weights = RBF_weights_1;
+	Game.RBF.perceptron.weights = RBF_weights_2;
+	Game.RBF.sigma = RBF_sigma;
+	Game.DTree.tree = DTree_tree;
+
+	Game.init_board( DEFAULT_COLS, DEFAULT_ROWS, DEFAULT_AI );
 
 }, false );

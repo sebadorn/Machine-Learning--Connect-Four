@@ -107,8 +107,7 @@ class RBF:
 		# Bias node
 		hidden[:,-1] = -1
 		# Run through perceptron and get activations
-		outputs = self.perceptron._forward( hidden )
-		# outputs = self.perceptron.use( hidden )
+		outputs = self.perceptron.use( hidden )
 
 		return outputs
 
@@ -147,12 +146,13 @@ class RBF:
 		f = open( filename, 'w' )
 		f.write( "# Config:\n" )
 		f.write( "# Trained with: %d" % DATA_LIMIT )
-		f.write( "# Eta: %f  Nodes: %d  Sigma: %f\n" % ( RBF_ETA, self.rbfs_amount, self.sigma ) )
+		f.write( "# Eta: %f  Nodes: %d\n" % ( RBF_ETA, self.rbfs_amount ) )
 		f.write(
 			"# Iterations: %d  K-means: %d  Normalize: %d\n"
 			% ( RBF_ITER, self.use_kmeans, self.normalize )
 		)
-		f.write( "\n# RBF\n" )
+		f.write( "\n# Sigma: %f\n" % self.sigma )
+		f.write( "\n\n# RBF\n" )
 		f.write( layer_1 )
 		f.write( "\n\n# Perceptron\n" )
 		f.write( layer_2 )
@@ -198,6 +198,9 @@ class RBF:
 			f.write( "var RBF_weights_" + str( i + 1 ) + " = new Array(\n" )
 			f.write( layers[i] )
 			f.write( ");\n" )
+
+		f.write( "var RBF_sigma = %f;" % self.sigma )
+
 		f.close()
 
 
@@ -214,6 +217,10 @@ class RBF:
 		for line in f:
 			line = line.strip()
 			if len( line ) <= 1:
+				continue
+			elif line.startswith( "# Sigma: " ):
+				sigma = line.replace( "# Sigma: ", "" )
+				self.sigma = float( sigma )
 				continue
 			elif line == "# RBF":
 				import_layer = 1
