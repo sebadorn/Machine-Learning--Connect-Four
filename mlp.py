@@ -221,13 +221,13 @@ class MLP:
 		# Acitvation in output layer
 		outputs = ny.dot( hidden, self.weights_layer2 )
 
-		if self.outtype == "linear":
-			pass
-		elif self.outtype == "logistic":
-			outputs = 1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
-		elif self.outtype == 'softmax':
-			normalizers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
-			outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalizers )
+		# if self.outtype == "linear":
+		# 	pass
+		# elif self.outtype == "logistic":
+		# 	outputs = 1.0 / ( 1.0 + ny.exp( -self.beta * outputs ) )
+		# elif self.outtype == 'softmax':
+		# 	normalizers = ny.sum( ny.exp( outputs ), axis = 1 ) * ny.ones( ( 1, ny.shape( outputs )[0] ) )
+		# 	outputs = ny.transpose( ny.transpose( ny.exp( outputs ) ) / normalizers )
 
 		return outputs
 

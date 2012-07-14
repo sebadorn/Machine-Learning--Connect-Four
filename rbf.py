@@ -95,7 +95,7 @@ class RBF:
 		return hidden
 
 
-	def _forward( self, inputs ):
+	def _forward( self, inputs, mode = "pcn_use" ):
 		""" Forward the network.
 
 		inputs -- Input data to forward through the network.
@@ -107,19 +107,22 @@ class RBF:
 		# Bias node
 		hidden[:,-1] = -1
 		# Run through perceptron and get activations
-		outputs = self.perceptron.use( hidden )
+		if mode == "pcn_use":
+			outputs = self.perceptron.use( hidden )
+		else:
+			outputs = self.perceptron._forward( hidden )
 
 		return outputs
 
 
-	def use( self, inputs ):
+	def use( self, inputs, mode = "pcn_use" ):
 		""" After training the network, now use it!
 
 		inputs -- Input/test data.
 		Returns the calculated output.
 		"""
 
-		return self._forward( inputs )
+		return self._forward( inputs, mode )
 
 
 	def export( self, filename = RBF_EXPORT_FILE ):
@@ -269,11 +272,12 @@ if __name__ == "__main__":
 
 	my_rbf = RBF( inputs, targets, sigma = 1, rbfs_amount = 4, use_kmeans = True )
 	my_rbf.train( eta = 0.2, iterations = 400 )
+	use_mode = "pcn_forward"
 
 	out = [
-		my_rbf.use( [0,0] ), my_rbf.use( [1,1] ),
-		my_rbf.use( [0,1] ), my_rbf.use( [1,0] ),
-		my_rbf.use( [0,1] ), my_rbf.use( [1,1] )
+		my_rbf.use( [0,0], use_mode ), my_rbf.use( [1,1], use_mode ),
+		my_rbf.use( [0,1], use_mode ), my_rbf.use( [1,0], use_mode ),
+		my_rbf.use( [0,1], use_mode ), my_rbf.use( [1,1], use_mode )
 	]
 	out_targets = [[0], [0], [1], [1], [1], [0]]
 
@@ -294,9 +298,9 @@ if __name__ == "__main__":
 	print "Testing imported RBF with XOR again:"
 
 	out = [
-		my_rbf.use( [1,0] ), my_rbf.use( [1,1] ),
-		my_rbf.use( [0,1] ), my_rbf.use( [1,0] ),
-		my_rbf.use( [0,1] ), my_rbf.use( [1,1] )
+		my_rbf.use( [1,0], use_mode ), my_rbf.use( [1,1], use_mode ),
+		my_rbf.use( [0,1], use_mode ), my_rbf.use( [1,0], use_mode ),
+		my_rbf.use( [0,1], use_mode ), my_rbf.use( [1,1], use_mode )
 	]
 	out_targets = [[1], [0], [1], [1], [1], [0]]
 

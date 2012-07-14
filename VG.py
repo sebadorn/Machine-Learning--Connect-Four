@@ -88,7 +88,7 @@ def print_help():
 	print "    help     - Display this help."
 	print
 	print_bold( "    Handling the AI" )
-	print "    select *  - Select the AI type to use: MLP, RBF"
+	print "    select *  - Select the AI type to use: MLP, RBF, DTree"
 	print "    train     - Train the previously selected AI."
 	print "    play      - Play Connect Four."
 	print "    export    - Export brain of AI."

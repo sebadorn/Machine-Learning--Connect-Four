@@ -67,7 +67,7 @@ class Perceptron:
 		""" Use the trained network. Which means running it forward.
 
 		inputs -- Input data to use the trained perceptron on.
-		Returns the classification by the perceptron. Which either 1 or 0.
+		Returns the classification by the perceptron. Which is either 1 or 0.
 		"""
 
 		outputs = ny.dot( inputs, self.weights )[0]
