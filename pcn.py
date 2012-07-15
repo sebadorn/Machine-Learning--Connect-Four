@@ -12,11 +12,7 @@ class Perceptron:
 	"""
 
 	def __init__( self, inputs, targets ):
-		""" Constructor.
-
-		inputs  --
-		targets --
-		"""
+		""" Constructor. """
 
 		self.nodes_in = len( inputs[0] )
 		self.nodes_out = len( targets[0] )
@@ -28,10 +24,8 @@ class Perceptron:
 	def train( self, inputs, targets, eta, iterations ):
 		""" Train the perceptron.
 
-		inputs     --
-		targets    --
-		eta        --
-		iterations --
+		eta        -- Learning rate.
+		iterations -- Number of iterations to train.
 		"""
 
 		# Add bias node

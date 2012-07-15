@@ -19,7 +19,7 @@ class RBF:
 		inputs      -- Input data for training.
 		targets     -- Target data to inputs.
 		rbfs_amount -- Amount of RBF nodes.
-		sigma       -- 
+		sigma       -- Radius of RBF neuron field. 0 for automatic calculation.
 		use_kmeans  -- Use k-means to initialise weights. Default: False
 		normalize   -- Default: False
 		"""
@@ -126,9 +126,7 @@ class RBF:
 
 
 	def export( self, filename = RBF_EXPORT_FILE ):
-		"""
-		Export the weight layers of the RBF.
-		"""
+		""" Export the weight layers of the RBF. """
 
 		layer_1, layer_2 = "", ""
 
@@ -163,9 +161,7 @@ class RBF:
 
 
 	def export_js( self, filename = RBF_EXPORT_FILE_JS ):
-		"""
-		Export the weight layers of the RBF as Javascript.
-		"""
+		""" Export the weight layers of the RBF as Javascript. """
 
 		layer_1, layer_2 = "", ""
 
@@ -208,9 +204,7 @@ class RBF:
 
 
 	def import_ai( self, filename = RBF_EXPORT_FILE ):
-		"""
-		Imports weight layers from a file.
-		"""
+		""" Imports weight layers from a file. """
 
 		f = open( filename, 'r' )
 

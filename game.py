@@ -15,8 +15,7 @@ class Game:
 
 
 	def __init__( self, ai ):
-		"""
-		Constructor.
+		""" Constructor.
 
 		ai -- Trained instance of game AI.
 		"""
@@ -63,8 +62,7 @@ class Game:
 
 
 	def _count_stones( self, column, row, stone, blank, ai, human ):
-		"""
-		Compares the value of the found stone with the existing stone types.
+		""" Compares the value of the found stone with the existing stone types.
 		Sets a stop flag if it is not possible anymore for either the human or the AI
 		to connect enough stones.
 
@@ -152,8 +150,7 @@ class Game:
 
 
 	def _check_proposed_col( self, pos ):
-		"""
-		Check if it is possible to place a stone in the given field.
+		""" Check if it is possible to place a stone in the given field.
 
 		Returns True if possible, False otherwise.
 		"""
@@ -170,8 +167,7 @@ class Game:
 
 
 	def _find_forced_move( self ):
-		"""
-		Check if the next move is a forced one and where to place the stone.
+		""" Check if the next move is a forced one and where to place the stone.
 		A forced move occurs if the human player or the AI could win the game with the next move.
 
 		Returns the position where to place the stone or -1 if not necessary.
@@ -225,8 +221,7 @@ class Game:
 
 
 	def check_win( self ):
-		"""
-		Check the game board if someone has won.
+		""" Check the game board if someone has won.
 
 		Returns the stone value of the winner or the value
 		of a blank stone if there is no winner yet.
@@ -347,8 +342,8 @@ class Game:
 
 
 	def _ask_ai( self ):
-		"""
-		Ask the AI to choose a column.
+		""" Ask the AI to choose a column.
+
 		Returns the index of the column to use or -1 if something went wrong.
 		"""
 

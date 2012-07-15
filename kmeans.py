@@ -14,7 +14,7 @@ class kmeans:
 	def __init__( self, k ):
 		""" Constructor.
 
-		k    -- Expected number of classes.
+		k    -- Expected number of classes/cluster centres.
 		"""
 
 		self.k = k
@@ -25,7 +25,6 @@ class kmeans:
 
 		data       -- Input data to train with.
 		iter_limit -- Maximum number of iterations. Default: 10
-
 		Returns the cluster centres.
 		"""
 

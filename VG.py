@@ -98,9 +98,7 @@ def print_help():
 
 
 def select_ai( cl, data, targets, original_import ):
-	"""
-	Select an AI. Create in instance of the needed class and return it.
-	"""
+	""" Select an AI. Create in instance of the needed class and return it. """
 	ai = None
 
 	# MLP
@@ -142,9 +140,7 @@ def select_ai( cl, data, targets, original_import ):
 
 
 def train_ai( ai, valid, validtargets ):
-	"""
-	Train the previously selected AI.
-	"""
+	""" Train the previously selected AI. """
 
 	if not ai:
 		print "Training not possible. You have to select an AI type first."

@@ -7,16 +7,18 @@ import ast
 
 
 class DTree:
-	"""
-	Decision Tree.
+	""" Decision Tree.
 	Code based on the code to the article "Building Decision Trees in Python - O'Reilly Media".
 	(http://onlamp.com/pub/a/python/2006/02/09/ai_decision_trees.html)
 	"""
 
 
 	def __init__( self, data, attributes, target_attr ):
-		"""
-		Constructor.
+		""" Constructor.
+
+		data        -- Training data.
+		attributes  -- Name of attributes in data.
+		target_attr -- The attribute in the data which is the classification to reach.
 		"""
 
 		self.data = data[:]
@@ -26,17 +28,13 @@ class DTree:
 
 
 	def train( self ):
-		"""
-		Build the decision tree.
-		"""
+		""" Build the decision tree. """
 
 		self.tree = self._make_tree( self.data, self.attributes, self.target_attr )
 
 
 	def _make_tree( self, data, attributes, target_attr ):
-		"""
-		Build the decision tree.
-		"""
+		""" Build the decision tree. """
 
 		data = data[:]
 		values = [record[self.target_attr] for record in data]
@@ -62,8 +60,7 @@ class DTree:
 
 
 	def _majority_value( self, data, target_attr ):
-		"""
-		Creates a list of all values in the target attribute for each record
+		""" Creates a list of all values in the target attribute for each record
 		in the data, and return the value that appears the most frequently.
 		"""
 
@@ -81,8 +78,7 @@ class DTree:
 
 
 	def _choose_attribute( self, data, attributes, target_attr ):
-		"""
-		Cycles through all the attributes and returns the attribute
+		""" Cycles through all the attributes and returns the attribute
 		with the highest information gain (or lowest entropy).
 		"""
 
@@ -100,9 +96,8 @@ class DTree:
 
 
 	def _get_values( self, data, attr ):
-		"""
-		Creates a list of values in the given attribute for
-		each recod in the data.
+		""" Creates a list of values in the given attribute for
+		each record in the data.
 		"""
 
 		data = data[:]
@@ -111,8 +106,7 @@ class DTree:
 
 
 	def _get_examples( self, data, attr, value ):
-		"""
-		Returns a list of all the records in <data> with
+		""" Returns a list of all the records in <data> with
 		the value of <attr> matching the given value.
 		"""
 
@@ -128,9 +122,7 @@ class DTree:
 
 
 	def _entropy( self, data, target_attr ):
-		"""
-		Calculate the entropy of the given data for the target attribute.
-		"""
+		""" Calculate the entropy of the given data for the target attribute. """
 
 		val_freq = {}
 		data_entropy = 0.0
@@ -149,8 +141,7 @@ class DTree:
 
 
 	def _gain( self, data, attr, target_attr ):
-		"""
-		Calculate the information gain (reduction in entropy) that would
+		""" Calculate the information gain (reduction in entropy) that would
 		result by splitting the data on the given attribute.
 		"""
 
@@ -173,9 +164,7 @@ class DTree:
 
 
 	def use( self, record, tree = None ):
-		"""
-		Return a classification for the given record.
-		"""
+		""" Return a classification for the given record. """
 
 		if tree is None:
 			tree = self.tree
@@ -194,9 +183,7 @@ class DTree:
 
 
 	def export( self, filename = DT_EXPORT_FILE ):
-		"""
-		Export a created decision tree.
-		"""
+		""" Export a created decision tree. """
 
 		f = open( filename, "w" )
 		f.write( str( self.tree ) )
@@ -204,9 +191,7 @@ class DTree:
 
 
 	def export_js( self, filename = DT_EXPORT_FILE_JS ):
-		"""
-		Export a created decision tree as Javascript file.
-		"""
+		""" Export a created decision tree as Javascript file. """
 
 		f = open( filename, "w" )
 		f.write( "var DTree_tree = " + str( self.tree ) + ";" )
@@ -214,9 +199,7 @@ class DTree:
 
 
 	def import_ai( self, filename = DT_EXPORT_FILE ):
-		"""
-		Import a previously created decision tree.
-		"""
+		""" Import a previously created decision tree. """
 
 		f = open( filename, "r" )
 		self.tree = ast.literal_eval( f.read() )

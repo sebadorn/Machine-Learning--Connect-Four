@@ -6,16 +6,14 @@ import numpy as ny
 
 
 class MLP:
-	"""
-	Multilayer Perceptron.
+	""" Multilayer Perceptron.
 	Code based on chapter 3 of 'Machine Learning: An Algorithmic Perspective' by Stephen Marsland.
 	(http://seat.massey.ac.nz/personal/s.r.marsland/MLBook.html)
 	"""
 
 
 	def __init__( self, inputs, targets, hidden_nodes = 2, beta = 1, momentum = 0.9 ):
-		"""
-		Constructor.
+		""" Constructor.
 
 		inputs       -- Array with training data.
 		targets      -- Array with targets to the training data.
@@ -44,8 +42,7 @@ class MLP:
 
 
 	def _init_weights( self ):
-		"""
-		Randomly initialize weights.
+		""" Randomly initialize weights.
 		There are to weight layers: One from the input nodes
 		to the hidden nodes, and one from the hidden nodes to
 		the output nodes.
@@ -65,11 +62,13 @@ class MLP:
 
 
 	def early_stopping( self, valid, validtargets, eta = 0.25, iterations = 1000, outtype = "logistic" ):
-		"""
-		Early stopping. Used instead of method train().
+		""" Early stopping. Used instead of method train().
 
-		eta        -- Learning rate.
-		iterations -- Number of iterations to do.
+		valid        -- Validation data.
+		validtargets -- Target values to validation data.
+		eta          -- Learning rate.
+		iterations   -- Number of iterations to do.
+		outtype      -- Type of activation function.
 		"""
 
 		# Add bias node
@@ -95,8 +94,7 @@ class MLP:
 
 
 	def train( self, eta = 0.25, iterations = 1000, outtype = "logistic" ):
-		"""
-		Train the network. Used instead of method early_stopping().
+		""" Train the network. Used instead of method early_stopping().
 
 		eta        -- Learning rate.
 		iterations -- Number of iterations to do.
@@ -126,8 +124,7 @@ class MLP:
 
 
 	def _forward( self, inputs ):
-		"""
-		Forward phase.
+		""" Forward phase.
 		Returns the calculated outputs.
 		"""
 
@@ -155,8 +152,7 @@ class MLP:
 
 
 	def _compute_errors( self ):
-		"""
-		Compute the error of each layer.
+		""" Compute the error of each layer.
 		Returns the error of the output and hidden layer.
 		"""
 
@@ -178,8 +174,7 @@ class MLP:
 
 
 	def _update_weights( self, deltao, deltah ):
-		"""
-		Update weights of layers.
+		""" Update weights of layers.
 
 		deltao -- Error in output layer.
 		deltah -- Error in hidden layer.
@@ -199,11 +194,9 @@ class MLP:
 
 
 	def use( self, inputs ):
-		"""
-		After training the network, now use it!
+		""" After training the network, now use it!
 
 		inputs -- Input/test data.
-
 		Returns the calculated output.
 		"""
 
@@ -233,9 +226,7 @@ class MLP:
 
 
 	def export( self, filename = MLP_EXPORT_FILE ):
-		"""
-		Export the weight layers of the MLP.
-		"""
+		""" Export the weight layers of the MLP. """
 
 		layer_1, layer_2 = "", ""
 
@@ -265,9 +256,7 @@ class MLP:
 
 
 	def export_js( self, filename = MLP_EXPORT_FILE_JS ):
-		"""
-		Export the weight layers of the MLP as Javascript.
-		"""
+		""" Export the weight layers of the MLP as Javascript. """
 
 		layer_1, layer_2 = "", ""
 
@@ -307,9 +296,7 @@ class MLP:
 
 
 	def import_ai( self, filename = MLP_EXPORT_FILE ):
-		"""
-		Imports weight layers from a file.
-		"""
+		""" Imports weight layers from a file. """
 
 		f = open( filename, 'r' )
 
@@ -362,7 +349,7 @@ if __name__ == "__main__":
 
 	print "Testing MLP with XOR:"
 	my_mlp = MLP( inputs, targets, hidden_nodes = 2 )
-	my_mlp.train( eta = 0.2, iterations = 1000, outtype = "logistic" )
+	my_mlp.train( eta = 0.2, iterations = 1000, outtype = "linear" )
 	out = [
 		round( my_mlp.use( [0,0] ) ), round( my_mlp.use( [0,1] ) ),
 		round( my_mlp.use( [1,0] ) ), round( my_mlp.use( [1,1] ) )
